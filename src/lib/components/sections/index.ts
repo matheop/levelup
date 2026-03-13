@@ -3,6 +3,7 @@ export { default as CostSection } from './CostSection.svelte';
 export { default as FinancingSection } from './FinancingSection.svelte';
 export { default as RevenueSection } from './RevenueSection.svelte';
 export { default as ChargesSection } from './ChargesSection.svelte';
+export { default as TaxesSection } from './TaxesSection.svelte';
 export { default as FutureWorksSection } from './FutureWorksSection.svelte';
 export { default as AmortizationSection } from './AmortizationSection.svelte';
 export { default as ResultsSection } from './ResultsSection.svelte';

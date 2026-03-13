@@ -4,9 +4,20 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { FutureWorkEntry } from './sectionTypes';
 
-	let { futureWorks = $bindable() } = $props<{
+	let { futureWorks = $bindable(), horizonYears = 20 } = $props<{
 		futureWorks: FutureWorkEntry[];
+		horizonYears?: number;
 	}>();
+
+	const totalAnnualizedCost = $derived(
+		futureWorks.length === 0
+			? 0
+			: futureWorks.reduce(
+					(s: number, w: FutureWorkEntry) =>
+						s + w.estimated_cost / (w.frequency_years || horizonYears),
+					0
+				)
+	);
 
 	function addFutureWork() {
 		futureWorks = [
@@ -19,7 +30,7 @@
 	}
 </script>
 
-<SectionCard title="Travaux futurs">
+<SectionCard title="Travaux futurs" variant="danger">
 	<div class="overflow-x-auto">
 		<div class="space-y-2">
 			<div class="grid grid-cols-5 items-center gap-1 text-sm text-slate-500 font-medium">
@@ -42,4 +53,12 @@
 	<button type="button" onclick={addFutureWork} class="text-slate-600 text-sm underline mt-2"
 		>+ Ajouter une ligne</button
 	>
+	{#snippet footer()}
+		<div class="flex justify-between items-center w-full">
+			<span class="font-medium text-slate-700">Total coûts annualisés (sur {horizonYears} ans)</span>
+			<span class="text-lg font-semibold text-slate-900">
+				{totalAnnualizedCost.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+			</span>
+		</div>
+	{/snippet}
 </SectionCard>

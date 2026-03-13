@@ -8,6 +8,13 @@
 	let { project = $bindable() } = $props<{
 		project: ProjectSectionState;
 	}>();
+
+	let lmnpSubRegimeStr = $state((project.lmnpSubRegime ?? 'regime_reel_simplifie') as string);
+	$effect(() => {
+		project.lmnpSubRegime = (lmnpSubRegimeStr || 'regime_reel_simplifie') as
+			| 'micro_bic'
+			| 'regime_reel_simplifie';
+	});
 </script>
 
 <SectionCard title="Projet">
@@ -36,5 +43,17 @@
 				]}
 			/>
 		</FormField>
+		{#if project.taxRegime === 'LMNP'}
+			<FormField id="lmnp-sub-regime" label="Régime LMNP">
+				<Select
+					id="lmnp-sub-regime"
+					bind:value={lmnpSubRegimeStr}
+					options={[
+						{ value: 'regime_reel_simplifie', label: 'Régime réel simplifié' },
+						{ value: 'micro_bic', label: 'Micro-BIC (abattement 50 %)' }
+					]}
+				/>
+			</FormField>
+		{/if}
 	</div>
 </SectionCard>

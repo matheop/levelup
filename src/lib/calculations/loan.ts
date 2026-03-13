@@ -74,3 +74,48 @@ export function approximateAnnualInterest(params: LoanParams): number {
 	const { loan_amount, interest_rate } = params;
 	return loan_amount * interest_rate;
 }
+
+/**
+ * Intérêts payés sur une année donnée (année 1 = première année du prêt).
+ * Utilisé pour le régime réel LMNP (déduction des intérêts d'emprunt).
+ */
+export function annualInterestForYear(params: LoanParams, year: number): number {
+	const {
+		loan_amount,
+		interest_rate,
+		loan_duration,
+		loan_deferral_period = 0
+	} = params;
+	if (loan_amount <= 0 || year < 1) return 0;
+	const totalMonths = loan_duration * 12;
+	const deferralMonths = Math.min(loan_deferral_period, totalMonths);
+	const monthlyRate = interest_rate / 12;
+	let balance = loan_amount;
+	const monthlyPay =
+		totalMonths > deferralMonths
+			? monthlyPayment(loan_amount, interest_rate, loan_duration)
+			: 0;
+	const startMonth = (year - 1) * 12;
+	const endMonth = Math.min(year * 12, totalMonths);
+	// Avancer jusqu'au début de l'année demandée
+	for (let m = 0; m < startMonth; m++) {
+		if (m < deferralMonths) {
+			// différé : intérêts seuls, pas de principal
+		} else {
+			const interest = balance * monthlyRate;
+			balance -= monthlyPay - interest;
+		}
+	}
+	// Intérêts sur l'année demandée
+	let yearInterest = 0;
+	for (let m = startMonth; m < endMonth; m++) {
+		if (m < deferralMonths) {
+			yearInterest += balance * monthlyRate;
+		} else {
+			const interest = balance * monthlyRate;
+			yearInterest += interest;
+			balance -= monthlyPay - interest;
+		}
+	}
+	return yearInterest;
+}

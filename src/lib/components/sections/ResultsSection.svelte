@@ -32,34 +32,42 @@
 	<div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
 		<StatCard
 			label="Rendement brut"
+			sublabel="Loyer annuel brut ÷ investissement total × 100"
 			value={simulationResult.gross_yield.toFixed(2) + ' %'}
 			size="lg"
-			trend="neutral"
+			trend="info"
 		/>
 		<StatCard
 			label="Rendement net"
+			sublabel="Cash-flow net année 1 ÷ investissement total × 100"
 			value={simulationResult.net_yield.toFixed(2) + ' %'}
 			size="lg"
-			trend="neutral"
+			trend="info"
 		/>
 		<StatCard
 			label="TRI"
+			sublabel="Taux pour lequel la VAN des flux nets = 0"
 			value={simulationResult.irr != null ? (simulationResult.irr * 100).toFixed(2) + ' %' : '–'}
 			size="lg"
-			trend="neutral"
+			trend="info"
 		/>
 		<StatCard
 			label="Investissement total"
+			sublabel="Coût total du projet (achat, notaire, travaux, meubles, frais)"
 			value={simulationResult.total_investment.toLocaleString('fr-FR') + ' €'}
 			size="lg"
-			trend="neutral"
+			trend="info"
 		/>
 	</div>
 	<div class="mb-6">
 		<h3 class="text-base font-medium text-slate-700 mb-3">Le cash-flow</h3>
+		<p class="text-sm text-slate-600 mb-3">
+			Revenus − charges − crédit − impôts − prélèvements sociaux. Année 1 = première année de la simulation.
+		</p>
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 			<StatCard
 				label="Cash-flow mensuel (année 1)"
+				sublabel="Cash-flow net année 1 ÷ 12"
 				value={monthlyCashflow.toLocaleString('fr-FR', {
 					minimumFractionDigits: 2,
 					maximumFractionDigits: 2
@@ -69,6 +77,7 @@
 			/>
 			<StatCard
 				label="Cash-flow annuel (année 1)"
+				sublabel="Revenus − charges − crédit − IR − PS"
 				value={firstYearNet.toLocaleString('fr-FR', {
 					minimumFractionDigits: 2,
 					maximumFractionDigits: 2

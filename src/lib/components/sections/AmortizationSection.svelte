@@ -20,11 +20,8 @@
 	<SectionCard
 		title="Amortissements"
 		infoContent={AMORT_INFO}
+		variant="success"
 	>
-		<p class="text-xs text-slate-500 mb-3"
-			>Terrain 15 % non amortissable. Répartition : Structure 60 %, Techniques 15 %, Agencements
-			25 %, Meubles à part (5 ans).</p
-		>
 		<div class="overflow-x-auto">
 			<table class="w-full text-sm text-slate-700">
 				<thead>

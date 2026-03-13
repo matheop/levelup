@@ -1,6 +1,6 @@
 <script lang="ts">
   type Size = 'sm' | 'lg';
-  type Trend = 'neutral' | 'positive' | 'negative';
+  type Trend = 'neutral' | 'positive' | 'negative' | 'info';
 
   const {
     label,
@@ -25,6 +25,7 @@
 
   const trendClasses: Record<Trend, string> = {
     neutral: 'bg-slate-50 border-slate-200 text-slate-800',
+    info: 'bg-indigo-50 border-indigo-200 text-indigo-800',
     positive: 'bg-emerald-50 border-emerald-200 text-emerald-800',
     negative: 'bg-rose-50 border-rose-200 text-rose-800'
   };
@@ -35,8 +36,8 @@
     align === 'center' ? 'text-center' : ''
   }`}
 >
-  <p class="text-sm text-slate-500 mb-0.5">{label}</p>
-  <p class="text-xl font-semibold">{value}</p>
+  <p class="text-{size === 'sm' ? 'xs' : 'sm'} text-slate-500 mb-0.5">{label}</p>
+  <p class="text-{size === 'sm' ? 'base' : 'xl'} font-semibold">{value}</p>
   {#if sublabel}
     <p class="text-xs text-slate-500 mt-1">{sublabel}</p>
   {/if}

@@ -13,6 +13,13 @@ export interface SimulationInput {
 	vacancy_rate: number;
 	social_contributions_rate: number;
 	is_tax_rate: number | null; // for SCI_IS
+	/** LMNP only: marginal tax bracket (e.g. 0.30 for 30 %). */
+	tax_bracket_rate?: number | null;
+	/** LMNP only: micro_bic (abattement 50 %) or regime_reel_simplifie (défaut). */
+	lmnp_sub_regime?: 'micro_bic' | 'regime_reel_simplifie';
+	/** Frais d'acquisition pour LMNP régime réel (amort. 10 ans). */
+	notary_fees?: number;
+	agency_fees?: number;
 	revenue: {
 		monthly_rent: number | null;
 		other_income?: number;
@@ -52,13 +59,18 @@ export interface SimulationResult {
 }
 
 /**
- * Simulate over a number of years (default 25).
+ * Simulate over a number of years (default 20).
  */
 export function simulateProject(
 	input: SimulationInput,
-	years: number = 25
+	years: number = 20
 ): SimulationResult {
 	const resultsByYear: YearResult[] = [];
+	let lmnpReelCf: { deficit: number; depreciation: number } | undefined =
+		input.regime === 'LMNP' && input.lmnp_sub_regime === 'regime_reel_simplifie'
+			? { deficit: 0, depreciation: 0 }
+			: undefined;
+
 	for (let y = 1; y <= years; y++) {
 		const cf = cashflowForYear({
 			revenue: input.revenue,
@@ -69,8 +81,17 @@ export function simulateProject(
 			futureWorksAnnualAverage: input.future_works_annual_average,
 			regime: input.regime,
 			socialContributionsRate: input.social_contributions_rate,
-			isTaxRate: input.is_tax_rate
+			isTaxRate: input.is_tax_rate,
+			taxBracketRate: input.tax_bracket_rate ?? null,
+			year: y,
+			lmnpReelCarryforwardIn: lmnpReelCf,
+			notary_fees: input.notary_fees,
+			agency_fees: input.agency_fees,
+			lmnp_sub_regime: input.lmnp_sub_regime
 		});
+		if (cf.lmnpReelCarryforwardOut) {
+			lmnpReelCf = cf.lmnpReelCarryforwardOut;
+		}
 		resultsByYear.push({
 			year: y,
 			gross_cashflow: cf.gross_cashflow,
@@ -108,7 +129,8 @@ export { irr } from './irr';
 export {
 	annualRevenues,
 	annualExpenses,
+	recoverableCharges,
 	taxForRegime,
 	cashflowForYear
 } from './cashflow';
-export type { RevenueInput, ExpensesInput } from './cashflow';
+export type { RevenueInput, ExpensesInput, LmnpReelCarryforward } from './cashflow';

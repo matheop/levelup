@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { monthlyPayment } from '$lib/calculations';
+	import { monthlyPayment, totalInterest } from '$lib/calculations';
 	import FormField from '$lib/components/form/FormField.svelte';
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
@@ -12,6 +12,11 @@
 	}>();
 
 	const personalContribution = $derived(totalProjectCost - financing.loanAmount);
+	const creditInterestTotal = $derived(
+		financing.loanAmount > 0 && financing.loanDuration > 0
+			? totalInterest(financing.loanAmount, financing.interestRate, financing.loanDuration)
+			: 0
+	);
 
 	const monthlyWithoutInsurance = $derived(
 		financing.loanAmount > 0 && financing.loanDuration > 0
@@ -30,7 +35,7 @@
 			label="Apport personnel (€)"
 			value={personalContribution.toLocaleString('fr-FR') + ' €'}
 			sublabel="Coût total du projet − montant emprunté"
-			size="lg"
+			size="sm"
 			trend="neutral"
 		/>
 	</div>
@@ -74,7 +79,7 @@
 				maximumFractionDigits: 2
 			}) + ' €'}
 			size="sm"
-			trend="neutral"
+			trend="info"
 		/>
 		<StatCard
 			label="Coût crédit (€/an)"
@@ -82,6 +87,22 @@
 				minimumFractionDigits: 2,
 				maximumFractionDigits: 2
 			}) + ' €'}
+			size="sm"
+			trend="neutral"
+		/>
+		</div>
+	<div class="border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+		<StatCard
+			label="Intérêts du crédit (€)"
+			value={creditInterestTotal.toLocaleString('fr-FR') + ' €'}
+			sublabel="Intérêts totaux sur toute la durée du prêt"
+			size="sm"
+			trend="info"
+		/>
+		<StatCard
+			label="Coût total projet + intérêts du crédit (€)"
+			value={(totalProjectCost + creditInterestTotal).toLocaleString('fr-FR') + ' €'}
+			sublabel="Projet + intérêts crédit (hors assurance)"
 			size="sm"
 			trend="neutral"
 		/>

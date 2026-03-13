@@ -10,6 +10,7 @@
 		FinancingSection,
 		RevenueSection,
 		ChargesSection,
+		TaxesSection,
 		FutureWorksSection,
 		AmortizationSection,
 		ResultsSection
@@ -21,6 +22,7 @@
 		FinancingSectionState,
 		RevenueSectionState,
 		ChargesSectionState,
+		TaxesSectionState,
 		FutureWorkEntry
 	} from '$lib/components/sections';
 
@@ -28,11 +30,13 @@
 	let project = $state<ProjectSectionState>({
 		projectName: 'Project Test',
 		projectType: 'purchase',
-		taxRegime: 'LMNP'
+		taxRegime: 'LMNP',
+		lmnpSubRegime: 'regime_reel_simplifie'
 	});
 	let costs = $state<CostSectionState>({
-		purchasePrice: 125000,
+		purchasePrice: 120000,
 		notaryFees: 10000,
+		agencyFees: 5000,
 		renovationCost: 3000,
 		furnitureCost: 7500,
 		bankFees: 0,
@@ -43,7 +47,7 @@
 		interestRate: 0.0327,
 		loanDuration: 20,
 		loanDeferralMonths: 0,
-		loanInsuranceMonthly: 0
+		loanInsuranceMonthly: 5.65
 	});
 	let revenue = $state<RevenueSectionState>({
 		rents: [{ monthly_amount: 850 }],
@@ -51,13 +55,17 @@
 		vacancyRate: 0.08
 	});
 	let charges = $state<ChargesSectionState>({
-		propertyTax: 865,
+		propertyTax: 860,
 		coOwnershipFees: 840,
 		managementFees: 0,
-		insurance: 204,
+		insurance: 196,
 		utilities: 0,
 		accountingFees: 620,
 		maintenanceProvision: 500
+	});
+	let taxes = $state<TaxesSectionState>({
+		taxBracketRate: 0.3,
+		socialContributionsRate: 0.186
 	});
 	let futureWorks = $state<FutureWorkEntry[]>([
 		{ work_type: 'Toiture', estimated_cost: 15000, planned_year: 15, frequency_years: 25 }
@@ -67,7 +75,9 @@
 
 	// Valeurs dérivées utilisées par plusieurs sections ou par la simulation
 	const totalProjectCost = $derived(
-		(project.projectType === 'purchase' ? costs.purchasePrice + costs.notaryFees : 0) +
+		(project.projectType === 'purchase'
+			? costs.purchasePrice + costs.notaryFees + (costs.agencyFees ?? 0)
+			: 0) +
 			costs.renovationCost +
 			(costs.furnitureCost || 0) +
 			costs.bankFees +
@@ -80,17 +90,19 @@
 	const totalOtherIncome = $derived(
 		revenue.otherIncomes.reduce((s, r) => s + (r.amount || 0), 0)
 	);
+	const annualRevenueAfterVacancy = $derived(
+		totalMonthlyRent * 12 * (1 - revenue.vacancyRate) + totalOtherIncome
+	);
 
 	const { depreciationRows: depreciationRowsForSimulation } = $derived(
 		getAmortizationData(project.projectType, costs)
 	);
 
-	const horizonYears = 25;
 	const futureWorksAnnual = $derived(
 		futureWorks.length === 0
 			? 0
 			: futureWorks.reduce(
-					(s, w) => s + w.estimated_cost / (w.frequency_years || horizonYears),
+					(s, w) => s + w.estimated_cost / (w.frequency_years || financing.loanDuration),
 					0
 				)
 	);
@@ -100,8 +112,14 @@
 		const input: SimulationInput = {
 			regime: project.taxRegime,
 			vacancy_rate: revenue.vacancyRate,
-			social_contributions_rate: project.taxRegime === 'SCI_IS' ? 0 : 0.172,
+			social_contributions_rate:
+				project.taxRegime === 'SCI_IS' ? 0 : taxes.socialContributionsRate,
 			is_tax_rate: project.taxRegime === 'SCI_IS' ? 0.25 : null,
+			tax_bracket_rate: project.taxRegime === 'LMNP' ? taxes.taxBracketRate : null,
+			lmnp_sub_regime:
+				project.taxRegime === 'LMNP' ? (project.lmnpSubRegime ?? 'regime_reel_simplifie') : undefined,
+			notary_fees: project.taxRegime === 'LMNP' && project.projectType === 'purchase' ? costs.notaryFees : undefined,
+			agency_fees: project.taxRegime === 'LMNP' && project.projectType === 'purchase' ? (costs.agencyFees ?? 0) : undefined,
 			revenue: {
 				monthly_rent: totalMonthlyRent,
 				other_income: totalOtherIncome,
@@ -128,12 +146,33 @@
 			total_investment: totalProjectCost,
 			annual_rent_gross: annualRentGross
 		};
-		simulationResult = simulateProject(input, horizonYears);
+		simulationResult = simulateProject(input, financing.loanDuration);
 	});
 
 	// Pour le footer
-	const firstYearNet = $derived(simulationResult?.resultsByYear[0]?.net_cashflow ?? 0);
+	const firstYearResult = $derived(simulationResult?.resultsByYear[0]);
+	const firstYearNet = $derived(firstYearResult?.net_cashflow ?? 0);
 	const monthlyCashflow = $derived(firstYearNet / 12);
+	const firstYearTaxAndPs = $derived(
+		firstYearResult != null
+			? firstYearResult.gross_cashflow - firstYearResult.net_cashflow
+			: null
+	);
+	// Première année où impôts + PS > 0 (pour LMNP régime réel)
+	const firstYearWithTax = $derived.by(() => {
+		const rows = simulationResult?.resultsByYear ?? [];
+		const found = rows.find(
+			(r) => r.gross_cashflow - r.net_cashflow > 0.01
+		);
+		return found != null ? found.year : null;
+	});
+	const firstYearTaxAmount = $derived.by(() => {
+		if (firstYearWithTax == null) return null;
+		const row = simulationResult?.resultsByYear?.find(
+			(r) => r.year === firstYearWithTax
+		);
+		return row != null ? row.gross_cashflow - row.net_cashflow : null;
+	});
 </script>
 
 <main class="max-w-[1920px] mx-auto p-4 md:p-6 pb-24 space-y-4 flex flex-col min-h-screen">
@@ -165,15 +204,24 @@
 
 			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
 				<RevenueSection bind:revenue />
-				<ChargesSection bind:charges />
-			</div>
-
-			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
-				<FutureWorksSection bind:futureWorks />
 				<AmortizationSection
 					projectType={project.projectType}
 					{costs}
 					taxRegime={project.taxRegime}
+					/>
+			</div>
+			
+			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+				<ChargesSection bind:charges />
+				<FutureWorksSection bind:futureWorks horizonYears={financing.loanDuration} />
+				<TaxesSection
+					bind:taxes
+					taxRegime={project.taxRegime}
+					lmnpSubRegime={project.lmnpSubRegime ?? 'regime_reel_simplifie'}
+					annualRevenueAfterVacancy={annualRevenueAfterVacancy}
+					firstYearTaxAndPs={firstYearTaxAndPs}
+					firstYearWithTax={firstYearWithTax}
+					firstYearTaxAmount={firstYearTaxAmount}
 				/>
 			</div>
 		</div>

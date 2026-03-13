@@ -10,7 +10,9 @@
 	}>();
 
 	const totalProjectCost = $derived(
-		(projectType === 'purchase' ? costs.purchasePrice + costs.notaryFees : 0) +
+		(projectType === 'purchase'
+			? costs.purchasePrice + costs.notaryFees + (costs.agencyFees ?? 0)
+			: 0) +
 			costs.renovationCost +
 			(costs.furnitureCost || 0) +
 			costs.bankFees +
@@ -18,7 +20,7 @@
 	);
 </script>
 
-<SectionCard title="Coûts totaux du projet" variant="muted">
+<SectionCard title="Coûts totaux du projet">
 	<div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3 text-sm">
 		{#if projectType === 'purchase'}
 			<FormField id="purchase-price" label="Prix d'achat (€)" className="text-slate-500 mb-0.5">
@@ -26,6 +28,9 @@
 			</FormField>
 			<FormField id="notary-fees" label="Frais de notaire (€)" className="text-slate-500 mb-0.5">
 				<Input id="notary-fees" type="number" min={0} bind:value={costs.notaryFees} />
+			</FormField>
+			<FormField id="agency-fees" label="Frais d'agence (€)" className="text-slate-500 mb-0.5">
+				<Input id="agency-fees" type="number" min={0} bind:value={costs.agencyFees} />
 			</FormField>
 		{/if}
 		<FormField id="renovation-cost" label="Travaux (€)" className="text-slate-500 mb-0.5">

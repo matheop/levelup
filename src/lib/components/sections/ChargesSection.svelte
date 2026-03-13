@@ -20,13 +20,10 @@
 	const totalRecoverableCharges = $derived(
 		charges.coOwnershipFees + charges.managementFees + charges.utilities
 	);
+	const chargesUsedForCalculation = $derived(totalAnnualCharges - totalRecoverableCharges);
 </script>
 
-<SectionCard title="Charges" variant="danger">
-	<p class="text-sm text-slate-600 mb-4"
-		>Charges annuelles (€/an) : taxe, copro, gestion, assurances, factures, comptabilité, provision
-		entretien.</p
-	>
+<SectionCard title="Charges" variant="danger" infoContent="Charges annuelles (€/an) : taxe, copro, gestion, assurances, factures, comptabilité, provision entretien.">
 	<div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
 		<FormField id="property-tax" label="Taxe foncière (€/an)">
 			<Input id="property-tax" type="number" min={0} bind:value={charges.propertyTax} />
@@ -67,6 +64,12 @@
 				<span class="text-slate-600">dont récupérables</span>
 				<span class="font-semibold text-slate-900"
 					>{totalRecoverableCharges.toLocaleString('fr-FR')} €</span
+				>
+			</div>
+			<div class="flex justify-between items-center text-sm border-t border-slate-200 pt-2 mt-2">
+				<span class="text-slate-600">Charges retenues pour le calcul</span>
+				<span class="font-semibold text-slate-900"
+					>{chargesUsedForCalculation.toLocaleString('fr-FR')} €</span
 				>
 			</div>
 		</div>

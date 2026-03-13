@@ -17,17 +17,17 @@
   let infoOpen = $state(false);
 
   const variantClasses: Record<Variant, string> = {
-    default: 'bg-white border-slate-200',
-    muted: 'bg-slate-50 border-slate-200',
-    success: 'bg-emerald-50 border-emerald-200',
-    danger: 'bg-rose-50 border-rose-200'
+    default: 'bg-mauve-50 border-mauve-200',
+    muted: 'bg-white border-slate-200',
+    success: 'bg-green-50 border-green-200',
+    danger: 'bg-red-50 border-red-200'
   };
 
   const footerBorderClasses: Record<Variant, string> = {
     default: 'border-slate-200',
     muted: 'border-slate-200',
-    success: 'border-emerald-200',
-    danger: 'border-rose-200'
+    success: 'border-green-200',
+    danger: 'border-red-200'
   };
 </script>
 
