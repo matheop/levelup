@@ -1,6 +1,6 @@
 <script lang="ts">
   type IconName = 'trash';
-  type Variant = 'ghost' | 'solid';
+  type Variant = 'filled' | 'outline' | 'transparent';
   type Tone = 'default' | 'danger';
   type Size = 'sm' | 'md';
 
@@ -8,9 +8,9 @@
 
   const {
     type = 'button',
-    variant = 'ghost',
+    variant = 'filled',
     tone = 'default',
-    size = 'sm',
+    size = 'md',
     leadingIcon,
     trailingIcon,
     iconClass = '',
@@ -33,32 +33,48 @@
   }>();
 
   const base =
-    'inline-flex items-center gap-1 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:ring-slate-400 transition';
+    'inline-flex items-center justify-center gap-1.5 rounded-lg font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800 transition';
 
   const sizeClasses: Record<Size, string> = {
     sm: 'px-1.5 py-1 text-xs',
-    md: 'px-2.5 py-1.5 text-sm'
-  };
-
-  const toneClasses: Record<Tone, string> = {
-    default: 'text-slate-600 hover:text-slate-800',
-    danger: 'text-red-600 hover:text-red-700'
-  };
-
-  const variantClasses: Record<Variant, string> = {
-    ghost: 'bg-transparent hover:bg-slate-100',
-    solid: 'bg-slate-800 text-white hover:bg-slate-900'
+    md: 'px-3 py-1.5 text-sm'
   };
 
   const iconSize: Record<Size, number> = {
     sm: 14,
     md: 16
   };
+
+  const variantToneClasses: Record<Variant, Record<Tone, string>> = {
+    filled: {
+      default:
+        'border border-slate-600/80 bg-slate-700/50 text-slate-200 shadow-sm hover:bg-slate-600/70 hover:text-white',
+      danger:
+        'border border-red-500/80 bg-red-600/50 text-red-100 shadow-sm hover:bg-red-600/70 hover:text-white'
+    },
+    outline: {
+      default:
+        'border border-slate-600/80 bg-transparent text-slate-200 hover:bg-slate-600/30',
+      danger:
+        'border border-red-500/80 bg-transparent text-red-300 hover:bg-red-500/20'
+    },
+    transparent: {
+      default: 'bg-transparent text-slate-200 hover:bg-slate-600/20',
+      danger: 'bg-transparent text-red-300 hover:bg-red-500/20'
+    }
+  };
+
+  const variantClasses = $derived(
+    variantToneClasses[variant as Variant][tone as Tone]
+  );
+  const iconToneClass = $derived(
+    tone === 'danger' ? 'text-red-400' : 'text-current'
+  );
 </script>
 
 <button
   type={type}
-  class={`${base} ${sizeClasses[size as Size]} ${toneClasses[tone as Tone]} ${variantClasses[variant as Variant]} ${className}`}
+  class="{base} {sizeClasses[size as Size]} {variantClasses} {className}"
   {disabled}
   onclick={onClick}
 >
@@ -66,7 +82,7 @@
     <Icon
       name={leadingIcon}
       size={iconSize[size as Size]}
-      className={`shrink-0 ${tone === 'danger' ? 'text-red-600' : 'text-slate-500'} ${iconClass}`}
+      className="shrink-0 {iconToneClass} {iconClass}"
     />
   {/if}
 
@@ -78,7 +94,7 @@
     <Icon
       name={trailingIcon}
       size={iconSize[size as Size]}
-      className={`shrink-0 ${tone === 'danger' ? 'text-red-600' : 'text-slate-500'} ${iconClass}`}
+      className="shrink-0 {iconToneClass} {iconClass}"
     />
   {/if}
 </button>

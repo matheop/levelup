@@ -1,6 +1,7 @@
 import type { TaxRegimeName } from '$lib/dbTypes';
 import type { SimulationInput } from '$lib/calculations';
-import type { ProjectType, LmnpSubRegime } from '$lib/components/sections/sectionTypes';
+import type { ProjectType } from '$lib/dbTypes';
+import type { LmnpSubRegime } from '$lib/types';
 import { getAmortizationData } from '$lib/components/sections/amortizationCalc';
 import { Cost } from './Cost.svelte';
 import { Financing } from './Financing.svelte';
@@ -17,7 +18,7 @@ export class Project {
 	projectName = $state('');
 	projectType = $state<ProjectType>('purchase');
 	taxRegime = $state<TaxRegimeName>('LMNP');
-	lmnpSubRegime = $state<LmnpSubRegime>('regime_reel_simplifie');
+	lmnpSubRegime = $state<LmnpSubRegime>('reel_simplifie');
 
 	cost: Cost;
 	financings = $state<Financing[]>([]);
@@ -81,6 +82,15 @@ export class Project {
 				);
 	}
 
+	/** Charges annuelles récurrentes + coûts annualisés des travaux futurs. */
+	get totalChargesAndWorksAnnual(): number {
+		return this.charges.totalAnnualCharges + this.futureWorksAnnualAverage;
+	}
+
+	get totalChargesAndWorksMonthly(): number {
+		return this.totalChargesAndWorksAnnual / 12;
+	}
+
 	buildSimulationInput(): SimulationInput {
 		const { depreciationRows } = getAmortizationData(this.projectType, this.cost);
 		const totalMonthlyRent = this.revenue.totalMonthlyRent;
@@ -129,7 +139,7 @@ export class Project {
 			projectName: 'Project Test',
 			projectType: 'purchase',
 			taxRegime: 'LMNP',
-			lmnpSubRegime: 'regime_reel_simplifie',
+			lmnpSubRegime: 'reel_simplifie',
 			cost: {
 				purchasePrice: 120000,
 				notaryFees: 10000,

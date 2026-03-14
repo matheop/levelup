@@ -1,4 +1,4 @@
-import type { ProjectType } from '$lib/components/sections/sectionTypes';
+import type { ProjectType } from '$lib/dbTypes';
 
 /**
  * Coûts du projet : achat, notaire, agence, travaux, meubles, frais bancaires.

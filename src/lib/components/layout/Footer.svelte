@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SimulationResult } from '$lib/calculations';
+	import Button from '$lib/components/ui/Button.svelte';
 	import ResultsSection from '$lib/components/sections/ResultsSection.svelte';
 
 	const {
@@ -25,9 +26,9 @@
 	function getTrendClass(value: string): string {
 		switch (value) {
 			case 'positive':
-				return 'text-emerald-400';
+				return 'text-green-400';
 			case 'negative':
-				return 'text-rose-400';
+				return 'text-red-400';
 			default:
 				return 'text-white';
 		}
@@ -80,13 +81,7 @@
 		{@render stats('Cash-flow mensuel (an 1)', monthlyCashflow)}
 		{#if simulationResult}
 			<span class="size-1 rounded-full bg-slate-500 hidden shrink-0 md:inline" aria-hidden="true"></span>
-			<button
-				type="button"
-				class="rounded-lg border border-slate-600/80 bg-slate-700/50 px-3 py-1.5 text-sm font-medium text-slate-200 shadow-sm transition hover:bg-slate-600/70 hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-800"
-				onclick={() => (resultsModalOpen = true)}
-			>
-				Détail des résultats
-			</button>
+			<Button variant="filled" label="Détail des résultats" onClick={() => (resultsModalOpen = true)} />
 		{/if}
 	</div>
 </footer>

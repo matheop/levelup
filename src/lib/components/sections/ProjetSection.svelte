@@ -4,23 +4,44 @@
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import type { Project } from '$lib/domain';
 
-	let { project } = $props<{
+	let { project, embedded = false } = $props<{
 		project: Project;
+		embedded?: boolean;
 	}>();
 
 	let lmnpSubRegimeStr = $derived(
-		(project.lmnpSubRegime ?? 'regime_reel_simplifie') as string
+		(project.lmnpSubRegime ?? 'reel_simplifie') as string
 	);
 	
 	$effect(() => {
-		project.lmnpSubRegime = (lmnpSubRegimeStr || 'regime_reel_simplifie') as
+		project.lmnpSubRegime = (lmnpSubRegimeStr || 'reel_simplifie') as
 			| 'micro_bic'
-			| 'regime_reel_simplifie';
+			| 'reel_simplifie';
 	});
 </script>
 
+{#if embedded}
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+		<Input label="Nom" id="project-name-emb" bind:value={project.projectName} />
+		<Select label="Type" id="project-type-emb" bind:value={project.projectType} options={[
+			{ value: 'purchase', label: 'Achat + travaux' },
+			{ value: 'renovation_only', label: 'Travaux seuls' }
+		]} />
+		<Select label="Régime fiscal" id="tax-regime-emb" bind:value={project.taxRegime} options={[
+			{ value: 'LMNP', label: 'LMNP' },
+			{ value: 'NU', label: 'Location nue' },
+			{ value: 'SCI_IS', label: "SCI à l'IS" }
+		]} />
+		{#if project.taxRegime === 'LMNP'}
+			<Select label="Régime LMNP" id="lmnp-sub-regime-emb" bind:value={lmnpSubRegimeStr} options={[
+				{ value: 'reel_simplifie', label: 'Régime réel simplifié' },
+				{ value: 'micro_bic', label: 'Micro-BIC (abattement 50 %)' }
+			]} />
+		{/if}
+	</div>
+{:else}
 <SectionCard title="Projet">
-	<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 		<Input label="Nom" id="project-name" bind:value={project.projectName} />
 		<Select label="Type" id="project-type" bind:value={project.projectType} options={[
 			{ value: 'purchase', label: 'Achat + travaux' },
@@ -33,9 +54,10 @@
 		]} />
 		{#if project.taxRegime === 'LMNP'}
 			<Select label="Régime LMNP" id="lmnp-sub-regime" bind:value={lmnpSubRegimeStr} options={[
-				{ value: 'regime_reel_simplifie', label: 'Régime réel simplifié' },
+				{ value: 'reel_simplifie', label: 'Régime réel simplifié' },
 				{ value: 'micro_bic', label: 'Micro-BIC (abattement 50 %)' }
 			]} />
 		{/if}
 	</div>
 </SectionCard>
+{/if}

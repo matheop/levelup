@@ -144,8 +144,8 @@ export function cashflowForYear(params: {
 	/** Frais d'acquisition pour amortissement 10 ans en LMNP réel : notaire + agence. */
 	notary_fees?: number;
 	agency_fees?: number;
-	/** micro_bic = abattement 50 % ; regime_reel_simplifie = charges + amort + déficit reportable. */
-	lmnp_sub_regime?: 'micro_bic' | 'regime_reel_simplifie';
+	/** micro_bic = abattement 50 % ; reel_simplifie = charges + amort + déficit reportable. */
+	lmnp_sub_regime?: 'micro_bic' | 'reel_simplifie';
 }): {
 	gross_cashflow: number;
 	net_cashflow: number;
@@ -163,7 +163,7 @@ export function cashflowForYear(params: {
 	const acquisitionAmortAnnual = acquisitionFees / LMNP_ACQUISITION_AMORT_YEARS;
 
 	const isLmnpReel =
-		params.regime === 'LMNP' && params.lmnp_sub_regime === 'regime_reel_simplifie';
+		params.regime === 'LMNP' && params.lmnp_sub_regime === 'reel_simplifie';
 
 	let taxableResult: number;
 	let tax = 0;
@@ -211,7 +211,7 @@ export function cashflowForYear(params: {
 			params.socialContributionsRate,
 			params.isTaxRate,
 			params.taxBracketRate ?? null,
-			params.regime === 'LMNP' && params.lmnp_sub_regime !== 'regime_reel_simplifie'
+			params.regime === 'LMNP' && params.lmnp_sub_regime !== 'reel_simplifie'
 				? revenues
 				: null
 		);

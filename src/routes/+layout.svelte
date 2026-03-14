@@ -6,4 +6,7 @@
 </script>
 
 <svelte:head><link rel="icon" href={favicon} /></svelte:head>
-{@render children()}
+
+<div class="layout-bg min-h-screen w-full">
+	{@render children()}
+</div>

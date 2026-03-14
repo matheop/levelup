@@ -1,6 +1,6 @@
 import type { DepreciationRow } from '$lib/calculations';
 import type { Cost } from '$lib/domain';
-import type { ProjectType } from './sectionTypes';
+import type { ProjectType } from '$lib/dbTypes';
 
 const TERRAIN_PERCENT = 0.15;
 const STRUCTURE_PERCENT = 0.6;
@@ -11,6 +11,10 @@ const TECHNIQUES_YEARS = 15;
 const AGENCEMENTS_YEARS = 10;
 const MEUBLES_YEARS = 5;
 const HORIZON_20 = 20;
+
+/** Info text for the amortization subsection (LMNP/SCI). */
+export const AMORT_INFO =
+	"<strong>Règles utilisées :</strong>\nPart terrain : 15 % non amortissable.\nBase bien (hors meubles) :\n- Achat : (prix d'achat + frais de notaire) × 0,85\n- Travaux seuls : coût des travaux × 0,85\n<strong>4 postes avec durées courtes :</strong>\n- Structure / gros œuvre : 60 % de la base bien, 30 ans\n- Installations techniques : 15 % de la base bien, 15 ans\n- Agencements intérieurs : 25 % de la base bien, 10 ans\n- Meubles : 100 % du coût meubles, 5 ans";
 
 export interface AmortLine {
 	label: string;

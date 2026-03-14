@@ -44,7 +44,7 @@
 					placeholder="€/mois"
 					className="w-28 flex-1 min-w-0"
 				/>
-				<Button tone="danger" trailingIcon="trash" onClick={() => removeRent(i)} />
+				<Button variant="transparent" tone="danger" trailingIcon="trash" onClick={() => removeRent(i)} />
 			</div>
 		{/each}
 		<button type="button" onclick={addRent} class="text-slate-600 text-sm underline"
@@ -99,7 +99,7 @@
 						placeholder="€/an"
 						className="w-12"
 					/>
-					<Button tone="danger" trailingIcon="trash" onClick={() => removeOtherIncome(i)} />
+					<Button variant="transparent" tone="danger" trailingIcon="trash" onClick={() => removeOtherIncome(i)} />
 				</div>
 			{/each}
 		</div>

@@ -6,9 +6,10 @@
 	const { title, variant = 'default', infoContent, children, footer, className = '' } = $props<{
 		title: string;
 		variant?: Variant;
-		/** Optional info text; when set, shows a (i) icon that toggles an info panel */
+		/** Optional info text for the card title; when set, shows a (i) icon that toggles an info panel */
 		infoContent?: string;
 		hasFooter?: boolean;
+		/** Use SectionSubtitle inside children for sub-sections (h3 + optional (i) per block) */
 		children: Snippet;
 		footer?: Snippet;
 		className?: string;
@@ -26,22 +27,22 @@
 
 	// Bandeau haut: fin et discret pour success/danger
 	const accentTopClasses: Record<Variant, string> = {
-		default: 'from-slate-300/40 to-transparent',
+		default: 'from-indigo-300/40 to-transparent',
 		muted: 'from-slate-200/50 to-transparent',
 		success: 'from-green-400/25 to-transparent h-6',
 		danger: 'from-red-400/25 to-transparent h-6'
 	};
 
 	const footerBorderClasses: Record<Variant, string> = {
-		default: 'border-slate-200/80',
+		default: 'border-indigo-200/80',
 		muted: 'border-slate-200/80',
-		success: 'border-green-200/60',
-		danger: 'border-red-200/60'
+		success: 'border-green-400/60',
+		danger: 'border-red-400/60'
 	};
 </script>
 
 <section
-	class="relative flex-shrink-0 overflow-hidden rounded-xl border p-5 shadow-md ring-1 backdrop-blur-[0.5px] {variantClasses[variant as Variant]} {className}"
+	class="SectionCard-{title.replaceAll(' ', '-')} relative flex-shrink-0 overflow-hidden rounded-xl border p-5 shadow-md ring-1 backdrop-blur-[0.5px] {variantClasses[variant as Variant]} {className}"
 >
 	<!-- Subtle top accent -->
 	<div
