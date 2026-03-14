@@ -1,31 +1,15 @@
 <script lang="ts">
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
-	import type { ChargesSectionState } from './sectionTypes';
+	import type { Charges } from '$lib/domain';
 
-	let { charges = $bindable() } = $props<{
-		charges: ChargesSectionState;
+	let { charges } = $props<{
+		charges: Charges;
 	}>();
 
-	const totalAnnualCharges = $derived(
-		charges.propertyTax +
-			charges.coOwnershipFees +
-			charges.managementFees +
-			charges.insurance +
-			charges.utilities +
-			charges.accountingFees +
-			charges.maintenanceProvision
-	);
-	const totalRecoverableCharges = $derived(
-		charges.coOwnershipFees + charges.managementFees + charges.utilities
-	);
-	const chargesUsedForCalculation = $derived(totalAnnualCharges - totalRecoverableCharges);
-
-	$effect(() => {
-		charges.totalAnnualCharges = totalAnnualCharges;
-		charges.totalRecoverableCharges = totalRecoverableCharges;
-		charges.chargesUsedForCalculation = chargesUsedForCalculation;
-	});
+	const totalAnnualCharges = $derived(charges.totalAnnualCharges);
+	const totalRecoverableCharges = $derived(charges.totalRecoverableCharges);
+	const chargesUsedForCalculation = $derived(charges.chargesUsedForCalculation);
 </script>
 
 <SectionCard title="Charges" variant="danger" infoContent="Charges annuelles (€/an) : taxe, copro, gestion, assurances, factures, comptabilité, provision entretien.">

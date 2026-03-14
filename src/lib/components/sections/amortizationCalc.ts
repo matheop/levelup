@@ -1,5 +1,6 @@
 import type { DepreciationRow } from '$lib/calculations';
-import type { CostSectionState, ProjectType } from './sectionTypes';
+import type { Cost } from '$lib/domain';
+import type { ProjectType } from './sectionTypes';
 
 const TERRAIN_PERCENT = 0.15;
 const STRUCTURE_PERCENT = 0.6;
@@ -58,7 +59,7 @@ function addLine(
 
 export function getAmortizationData(
 	projectType: ProjectType,
-	costs: CostSectionState
+	costs: Cost
 ): { lines: AmortLine[]; depreciationRows: DepreciationRow[] } {
 	const baseBien =
 		projectType === 'purchase'

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
-	import type { CostSectionState, ProjectType } from './sectionTypes';
+	import type { Cost } from '$lib/domain';
+	import type { ProjectType } from './sectionTypes';
 	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { getAmortizationData } from './amortizationCalc';
 
@@ -9,7 +10,7 @@
 
 	let { projectType, costs, taxRegime } = $props<{
 		projectType: ProjectType;
-		costs: CostSectionState;
+		costs: Cost;
 		taxRegime: TaxRegimeName;
 	}>();
 

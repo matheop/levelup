@@ -2,13 +2,16 @@
 	import Input from '$lib/components/form/Input.svelte';
 	import Select from '$lib/components/form/Select.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
-	import type { ProjectSectionState } from './sectionTypes';
+	import type { Project } from '$lib/domain';
 
-	let { project = $bindable() } = $props<{
-		project: ProjectSectionState;
+	let { project } = $props<{
+		project: Project;
 	}>();
 
-	let lmnpSubRegimeStr = $state((project.lmnpSubRegime ?? 'regime_reel_simplifie') as string);
+	let lmnpSubRegimeStr = $derived(
+		(project.lmnpSubRegime ?? 'regime_reel_simplifie') as string
+	);
+	
 	$effect(() => {
 		project.lmnpSubRegime = (lmnpSubRegimeStr || 'regime_reel_simplifie') as
 			| 'micro_bic'

@@ -1,31 +1,19 @@
 <script lang="ts">
-	import { monthlyPayment, totalInterest } from '$lib/calculations';
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import Sumup from '../layout/Sumup.svelte';
-	import type { FinancingSectionState } from './sectionTypes';
+	import type { Financing } from '$lib/domain';
 
-	let { financing = $bindable(), totalProjectCost, totalProjectCostWithInterest } = $props<{
-		financing: FinancingSectionState;
-		totalProjectCost?: number;
-		/** Coût total projet + intérêts + assurance (calculé par la page et éventuellement stocké dans costs). */
+	let { financing, totalProjectCost, totalProjectCostWithInterest } = $props<{
+		financing: Financing;
+		totalProjectCost: number;
 		totalProjectCostWithInterest: number;
 	}>();
 
-	const personalContribution = $derived((totalProjectCost ?? 0) - financing.loanAmount);
-	const creditInterestTotal = $derived(
-		financing.loanAmount > 0 && financing.loanDuration > 0
-			? totalInterest(financing.loanAmount, financing.interestRate, financing.loanDuration) +
-				(financing.loanInsuranceMonthly || 0) * 12 * financing.loanDuration
-			: 0
-	);
-
-	const monthlyWithoutInsurance = $derived(
-		financing.loanAmount > 0 && financing.loanDuration > 0
-			? monthlyPayment(financing.loanAmount, financing.interestRate, financing.loanDuration)
-			: 0
-	);
+	const personalContribution = $derived(totalProjectCost - financing.loanAmount);
+	const creditInterestTotal = $derived(financing.creditInterestTotal());
+	const monthlyWithoutInsurance = $derived(financing.monthlyPayment());
 	const monthlyWithInsurance = $derived(
 		monthlyWithoutInsurance + (financing.loanInsuranceMonthly || 0)
 	);

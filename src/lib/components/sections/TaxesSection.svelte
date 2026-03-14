@@ -1,20 +1,20 @@
 <script lang="ts">
 	import Select from '$lib/components/form/Select.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
-	import type { TaxesSectionState } from './sectionTypes';
+	import type { Taxes } from '$lib/domain';
 	import type { SimulationResult, YearResult } from '$lib/calculations';
 
 	const LMNP_ABATTEMENT = 0.5; // 50 % LMLD
 	const EXAMPLE_REVENUE = 10_000;
 
 	let {
-		taxes = $bindable(),
+		taxes,
 		taxRegime,
 		lmnpSubRegime = 'regime_reel_simplifie',
 		annualRevenueAfterVacancy = 0,
 		simulationResult,
 	} = $props<{
-		taxes: TaxesSectionState;
+		taxes: Taxes;
 		taxRegime: 'LMNP' | 'NU' | 'SCI_IS';
 		lmnpSubRegime?: 'micro_bic' | 'regime_reel_simplifie';
 		annualRevenueAfterVacancy?: number;
@@ -31,10 +31,13 @@
 		{ value: '0.45', label: '45 %' }
 	];
 
-	let taxBracketStr = $state((taxes.taxBracketRate ?? 0.3).toFixed(2));
+	let taxBracketStr = $derived(
+		(taxes.taxBracketRate ?? 0.3).toFixed(2)
+	);
+	
 	$effect(() => {
 		const num = parseFloat(taxBracketStr);
-		if (!Number.isNaN(num) && num >= 0 && num <= 1) {
+		if (!Number.isNaN(num) && num >= 0 && num <= 1 && num !== taxes.taxBracketRate) {
 			taxes.taxBracketRate = num;
 		}
 	});

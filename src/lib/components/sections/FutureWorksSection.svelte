@@ -2,31 +2,33 @@
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import type { FutureWorkEntry } from './sectionTypes';
+	import { FutureWork, type Project } from '$lib/domain';
 
-	let { futureWorks = $bindable(), horizonYears = 20 } = $props<{
-		futureWorks: FutureWorkEntry[];
+	let { project, horizonYears = 20 } = $props<{
+		project: Project;
 		horizonYears?: number;
 	}>();
+
+	const futureWorks = $derived(project.futureWorks);
 
 	const totalAnnualizedCost = $derived(
 		futureWorks.length === 0
 			? 0
 			: futureWorks.reduce(
-					(s: number, w: FutureWorkEntry) =>
+					(s: number, w: FutureWork) =>
 						s + w.estimated_cost / (w.frequency_years || horizonYears),
 					0
 				)
 	);
 
 	function addFutureWork() {
-		futureWorks = [
-			...futureWorks,
-			{ work_type: '', estimated_cost: 0, planned_year: 10, frequency_years: 0 }
+		project.futureWorks = [
+			...project.futureWorks,
+			new FutureWork({ work_type: '', estimated_cost: 0, planned_year: 10, frequency_years: 0 })
 		];
 	}
 	function removeFutureWork(i: number) {
-		futureWorks = futureWorks.filter((_: FutureWorkEntry, idx: number) => idx !== i);
+		project.futureWorks = project.futureWorks.filter((_: FutureWork, idx: number) => idx !== i);
 	}
 </script>
 
@@ -39,7 +41,7 @@
 				<span class="col-span-1">Année</span>
 				<span class="col-span-1">Fréq. (ans)</span>
 			</div>
-			{#each futureWorks as work, i (i)}
+			{#each project.futureWorks as work, i (i)}
 				<div class="grid grid-cols-5 items-center gap-1">
 					<Input bind:value={work.work_type} placeholder="Type" className="col-span-1" />
 					<Input type="number" bind:value={work.estimated_cost} placeholder="0" className="col-span-1" />

@@ -3,39 +3,32 @@
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import type { RevenueSectionState, RentEntry, OtherIncomeEntry } from './sectionTypes';
 	import Sumup from '../layout/Sumup.svelte';
+	import { RentEntry, OtherIncomeEntry, type Revenue } from '$lib/domain';
 
-	let { revenue = $bindable() } = $props<{
-		revenue: RevenueSectionState;
+	let { revenue } = $props<{
+		revenue: Revenue;
 	}>();
 
 	function addRent() {
-		revenue.rents = [...revenue.rents, { monthly_amount: 0 }];
+		revenue.rents = [...revenue.rents, new RentEntry(0)];
 	}
 	function removeRent(i: number) {
 		revenue.rents = revenue.rents.filter((_: RentEntry, idx: number) => idx !== i);
 	}
 	function addOtherIncome() {
-		revenue.otherIncomes = [...revenue.otherIncomes, { label: '', amount: 0 }];
+		revenue.otherIncomes = [...revenue.otherIncomes, new OtherIncomeEntry()];
 	}
 	function removeOtherIncome(i: number) {
-		revenue.otherIncomes = revenue.otherIncomes.filter(
-			(_: OtherIncomeEntry, idx: number) => idx !== i
-		);
+		revenue.otherIncomes = revenue.otherIncomes.filter((_: OtherIncomeEntry, idx: number) => idx !== i);
 	}
 
-	const totalMonthlyRent = $derived(
-		revenue.rents.reduce((s: number, r: RentEntry) => s + (r.monthly_amount || 0), 0)
-	);
+	const totalMonthlyRent = $derived(revenue.totalMonthlyRent);
 	const annualRentGrossBeforeVacancy = $derived(totalMonthlyRent * 12);
 	const annualRentAfterVacancy = $derived(
 		totalMonthlyRent * 12 * (1 - revenue.vacancyRate)
 	);
-	const totalOtherIncome = $derived(
-		revenue.otherIncomes.reduce((s: number, r: OtherIncomeEntry) => s + (r.amount || 0), 0)
-	);
-	const totalAnnualRevenue = $derived(annualRentAfterVacancy + totalOtherIncome);
+	const totalAnnualRevenue = $derived(revenue.annualRevenueAfterVacancy);
 </script>
 
 <SectionCard title="Revenus" variant="success">
