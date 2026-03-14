@@ -20,6 +20,12 @@
 		charges.coOwnershipFees + charges.managementFees + charges.utilities
 	);
 	const chargesUsedForCalculation = $derived(totalAnnualCharges - totalRecoverableCharges);
+
+	$effect(() => {
+		charges.totalAnnualCharges = totalAnnualCharges;
+		charges.totalRecoverableCharges = totalRecoverableCharges;
+		charges.chargesUsedForCalculation = chargesUsedForCalculation;
+	});
 </script>
 
 <SectionCard title="Charges" variant="danger" infoContent="Charges annuelles (€/an) : taxe, copro, gestion, assurances, factures, comptabilité, provision entretien.">

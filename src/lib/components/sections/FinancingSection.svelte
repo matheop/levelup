@@ -3,17 +3,21 @@
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import Sumup from '../layout/Sumup.svelte';
 	import type { FinancingSectionState } from './sectionTypes';
 
-	let { financing = $bindable(), totalProjectCost } = $props<{
+	let { financing = $bindable(), totalProjectCost, totalProjectCostWithInterest } = $props<{
 		financing: FinancingSectionState;
-		totalProjectCost: number;
+		totalProjectCost?: number;
+		/** Coût total projet + intérêts + assurance (calculé par la page et éventuellement stocké dans costs). */
+		totalProjectCostWithInterest: number;
 	}>();
 
-	const personalContribution = $derived(totalProjectCost - financing.loanAmount);
+	const personalContribution = $derived((totalProjectCost ?? 0) - financing.loanAmount);
 	const creditInterestTotal = $derived(
 		financing.loanAmount > 0 && financing.loanDuration > 0
-			? totalInterest(financing.loanAmount, financing.interestRate, financing.loanDuration)
+			? totalInterest(financing.loanAmount, financing.interestRate, financing.loanDuration) +
+				(financing.loanInsuranceMonthly || 0) * 12 * financing.loanDuration
 			: 0
 	);
 
@@ -45,7 +49,7 @@
 		<Input label="Différé (mois)" id="loan-deferral" type="number" min={0} bind:value={financing.loanDeferralMonths} />
 		<Input label="Assurance emprunteur (€/mois)" id="loan-insurance" type="number" min={0} step={0.01} bind:value={financing.loanInsuranceMonthly} />
 	</div>
-	<div class="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+	<div class="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 		<StatCard
 			label="Mensualité hors assurance"
 			value={monthlyWithoutInsurance.toLocaleString('fr-FR', {
@@ -64,6 +68,8 @@
 			size="sm"
 			trend="info"
 		/>
+	</div>
+	<div class="border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 		<StatCard
 			label="Coût crédit (€/an)"
 			value={annualLoanCost.toLocaleString('fr-FR', {
@@ -73,21 +79,15 @@
 			size="sm"
 			trend="neutral"
 		/>
-		</div>
-	<div class="border-slate-200 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
 		<StatCard
-			label="Intérêts du crédit (€)"
+			label="Coût total du crédit – intérêts + assurance (€)"
 			value={creditInterestTotal.toLocaleString('fr-FR') + ' €'}
-			sublabel="Intérêts totaux sur toute la durée du prêt"
 			size="sm"
 			trend="info"
 		/>
-		<StatCard
-			label="Coût total projet + intérêts du crédit (€)"
-			value={(totalProjectCost + creditInterestTotal).toLocaleString('fr-FR') + ' €'}
-			sublabel="Projet + intérêts crédit (hors assurance)"
-			size="sm"
-			trend="neutral"
-		/>
 	</div>
+
+	{#snippet footer()}
+		<Sumup title="Coût total projet" cost={totalProjectCostWithInterest} />
+	{/snippet}
 </SectionCard>

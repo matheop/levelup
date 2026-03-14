@@ -1,6 +1,7 @@
 <script lang="ts">
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
+	import Sumup from '../layout/Sumup.svelte';
 	import type { CostSectionState, ProjectType } from './sectionTypes';
 
 	let { costs = $bindable(), projectType } = $props<{
@@ -14,8 +15,7 @@
 			: 0) +
 			costs.renovationCost +
 			(costs.furnitureCost || 0) +
-			costs.bankFees +
-			costs.guaranteeFees
+			costs.bankFees
 	);
 </script>
 
@@ -29,12 +29,8 @@
 		<Input label="Travaux (€)" id="renovation-cost" type="number" min={0} bind:value={costs.renovationCost} />
 		<Input label="Meubles (€)" id="furniture-cost" type="number" min={0} bind:value={costs.furnitureCost} />
 		<Input label="Frais bancaires (€)" id="bank-fees" type="number" min={0} bind:value={costs.bankFees} />
-		<Input label="Frais de caution (€)" id="guarantee-fees" type="number" min={0} bind:value={costs.guaranteeFees} />
 	</div>
 	{#snippet footer()}
-		<div class="flex justify-between items-center w-full">
-			<span class="font-medium text-slate-700">Total coûts projet</span>
-			<span class="text-lg font-semibold text-slate-900">{totalProjectCost.toLocaleString('fr-FR')} €</span>
-		</div>
+		<Sumup title="Total coûts projet" cost={totalProjectCost} />
 	{/snippet}
 </SectionCard>

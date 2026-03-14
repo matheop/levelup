@@ -116,8 +116,8 @@
 				<div class="flex-1 flex flex-col items-center gap-0.5">
 					<div
 						class="w-full rounded-t min-h-[2px] {row.net_cashflow >= 0
-							? 'bg-emerald-500'
-							: 'bg-rose-400'}"
+							? 'bg-green-500'
+							: 'bg-red-400'}"
 						style="height: {Math.abs(row.net_cashflow) / maxCf * 80}px"
 					></div>
 					<span class="text-xs text-slate-500">{row.year}</span>
@@ -142,8 +142,8 @@
 						<td class="text-right py-2">{row.gross_cashflow.toLocaleString('fr-FR')}</td>
 						<td
 							class="text-right py-2 font-medium {row.net_cashflow >= 0
-								? 'text-emerald-700'
-								: 'text-rose-700'}"
+								? 'text-green-700'
+								: 'text-red-700'}"
 						>
 							{row.net_cashflow.toLocaleString('fr-FR')}
 						</td>

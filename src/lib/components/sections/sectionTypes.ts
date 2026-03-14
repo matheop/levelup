@@ -14,26 +14,27 @@ export interface ProjectSectionState {
 }
 
 export interface CostSectionState {
+	totalProjectCost?: number;
+	/** Coût total du projet + intérêts du crédit + assurance emprunteur sur la durée du prêt. */
+	totalProjectCostWithInterest?: number;
 	purchasePrice: number;
 	notaryFees: number;
-	/** Frais d'agence (frais d'acquisition, amortissables en LMNP réel). */
 	agencyFees: number;
 	renovationCost: number;
 	furnitureCost: number;
 	bankFees: number;
-	guaranteeFees: number;
 }
 
 export interface FinancingSectionState {
-	loanAmount: number;
-	interestRate: number;
+	loanAmount: number; // montant emprunté
+	interestRate: number; // taux annuel
 	loanDuration: number;
-	loanDeferralMonths: number;
+	loanDeferralMonths: number; // nombre de mois de différé
 	loanInsuranceMonthly: number;
 }
 
 export interface RentEntry {
-	monthly_amount: number;
+	monthly_amount: number; // loyer mensuel
 }
 
 export interface OtherIncomeEntry {
@@ -44,24 +45,27 @@ export interface OtherIncomeEntry {
 export interface RevenueSectionState {
 	rents: RentEntry[];
 	otherIncomes: OtherIncomeEntry[];
-	vacancyRate: number;
+	vacancyRate: number; // taux de vacance locative
 }
 
 export interface ChargesSectionState {
-	propertyTax: number;
-	coOwnershipFees: number;
-	managementFees: number;
-	insurance: number;
-	utilities: number;
-	accountingFees: number;
-	maintenanceProvision: number;
+	propertyTax: number; // taxe foncière
+	coOwnershipFees: number; // charges de copropriété
+	managementFees: number; // gestion locative
+	insurance: number; // assurances
+	utilities: number; // factures (électricité, eau…)
+	accountingFees: number; // honoraires comptables
+	maintenanceProvision: number; // provision pour entretien
+	totalAnnualCharges?: number;
+	totalRecoverableCharges?: number;
+	chargesUsedForCalculation?: number;
 }
 
 export interface FutureWorkEntry {
-	work_type: string;
-	estimated_cost: number;
-	planned_year: number;
-	frequency_years: number;
+	work_type: string; // type de travaux
+	estimated_cost: number; // coût estimé
+	planned_year: number; // année de planification
+	frequency_years: number; // fréquence (années entre deux travaux)
 }
 
 /** Pour LMNP : tranche marginale IR (ex. 0.30 = 30 %), prélèvements sociaux (ex. 0.186 en 2026). */

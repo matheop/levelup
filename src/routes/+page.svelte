@@ -1,6 +1,7 @@
 <script lang="ts">
 	import {
 		simulateProject,
+		totalInterest,
 		type SimulationInput,
 		type SimulationResult
 	} from '$lib/calculations';
@@ -12,8 +13,7 @@
 		ChargesSection,
 		TaxesSection,
 		FutureWorksSection,
-		AmortizationSection,
-		ResultsSection
+		AmortizationSection
 	} from '$lib/components/sections';
 	import { getAmortizationData } from '$lib/components/sections/amortizationCalc';
 	import type {
@@ -25,6 +25,8 @@
 		TaxesSectionState,
 		FutureWorkEntry
 	} from '$lib/components/sections';
+	import Footer from '$lib/components/layout/Footer.svelte';
+	import Header from '$lib/components/layout/Header.svelte';
 
 	// --- State par section (seules les valeurs utiles aux autres sections sont dérivées ici) ---
 	let project = $state<ProjectSectionState>({
@@ -40,7 +42,6 @@
 		renovationCost: 3000,
 		furnitureCost: 7500,
 		bankFees: 0,
-		guaranteeFees: 0
 	});
 	let financing = $state<FinancingSectionState>({
 		loanAmount: 115500,
@@ -56,12 +57,12 @@
 	});
 	let charges = $state<ChargesSectionState>({
 		propertyTax: 860,
-		coOwnershipFees: 840,
+		coOwnershipFees: 816,
 		managementFees: 0,
 		insurance: 196,
 		utilities: 0,
-		accountingFees: 620,
-		maintenanceProvision: 500
+		accountingFees: 622,
+		maintenanceProvision: 0,
 	});
 	let taxes = $state<TaxesSectionState>({
 		taxBracketRate: 0.3,
@@ -80,9 +81,20 @@
 			: 0) +
 			costs.renovationCost +
 			(costs.furnitureCost || 0) +
-			costs.bankFees +
-			costs.guaranteeFees
+			costs.bankFees
 	);
+
+	const creditInterestTotal = $derived(
+		financing.loanAmount > 0 && financing.loanDuration > 0
+			? totalInterest(financing.loanAmount, financing.interestRate, financing.loanDuration) +
+				(financing.loanInsuranceMonthly || 0) * 12 * financing.loanDuration
+			: 0
+	);
+	const totalProjectCostWithInterest = $derived(totalProjectCost + creditInterestTotal);
+
+	$effect(() => {
+		costs.totalProjectCostWithInterest = totalProjectCostWithInterest;
+	});
 
 	const totalMonthlyRent = $derived(
 		revenue.rents.reduce((s, r) => s + (r.monthly_amount || 0), 0)
@@ -152,57 +164,25 @@
 	// Pour le footer
 	const firstYearResult = $derived(simulationResult?.resultsByYear[0]);
 	const firstYearNet = $derived(firstYearResult?.net_cashflow ?? 0);
-	const monthlyCashflow = $derived(firstYearNet / 12);
-	const firstYearTaxAndPs = $derived(
-		firstYearResult != null
-			? firstYearResult.gross_cashflow - firstYearResult.net_cashflow
-			: null
-	);
-	// Première année où impôts + PS > 0 (pour LMNP régime réel)
-	const firstYearWithTax = $derived.by(() => {
-		const rows = simulationResult?.resultsByYear ?? [];
-		const found = rows.find(
-			(r) => r.gross_cashflow - r.net_cashflow > 0.01
-		);
-		return found != null ? found.year : null;
-	});
-	const firstYearTaxAmount = $derived.by(() => {
-		if (firstYearWithTax == null) return null;
-		const row = simulationResult?.resultsByYear?.find(
-			(r) => r.year === firstYearWithTax
-		);
-		return row != null ? row.gross_cashflow - row.net_cashflow : null;
-	});
+	const monthlyCashflow = $derived(firstYearNet / 12);	
 </script>
 
-<main class="max-w-[1920px] mx-auto p-4 md:p-6 pb-24 space-y-4 flex flex-col min-h-screen">
-	<header class="flex-shrink-0 rounded-xl border border-slate-200 bg-slate-800 text-white px-5 py-4 shadow-sm">
-		<div class="flex flex-wrap items-center gap-4 md:gap-8">
-			<h1 class="text-xl font-semibold">{project.projectName || 'Sans nom'}</h1>
-			<span class="text-slate-300">|</span>
-			<span class="text-sm md:text-base"
-				>{project.projectType === 'purchase' ? 'Achat + travaux' : 'Travaux seuls'}</span
-			>
-			<span class="text-slate-300">|</span>
-			<span class="text-sm md:text-base"
-				>{project.taxRegime === 'LMNP'
-					? 'LMNP'
-					: project.taxRegime === 'NU'
-						? 'Location nue'
-						: "SCI à l'IS"}</span
-			>
-		</div>
-	</header>
+<Header
+	projectName={project.projectName}
+	projectType={project.projectType}
+	taxRegime={project.taxRegime}
+/>
 
+<main class="max-w-[1920px] mx-auto mb-20 p-4 md:p-6 pb-28 space-y-4 flex flex-col min-h-screen">
 	<div class="flex-1 overflow-x-auto overflow-y-hidden pb-2" style="min-height: 0;">
 		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6 min-w-0" style="min-width: min(100%, 1200px);">
-			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
 				<ProjetSection bind:project />
 				<CostSection bind:costs projectType={project.projectType} />
-				<FinancingSection bind:financing {totalProjectCost} />
+				<FinancingSection bind:financing {totalProjectCost} totalProjectCostWithInterest={costs.totalProjectCostWithInterest ?? totalProjectCostWithInterest} />
 			</div>
 
-			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
 				<RevenueSection bind:revenue />
 				<AmortizationSection
 					projectType={project.projectType}
@@ -211,70 +191,30 @@
 					/>
 			</div>
 			
-			<div class="space-y-6 min-w-[320px] max-h-[70vh] overflow-y-auto overflow-x-hidden">
+			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
 				<ChargesSection bind:charges />
 				<FutureWorksSection bind:futureWorks horizonYears={financing.loanDuration} />
 				<TaxesSection
 					bind:taxes
 					taxRegime={project.taxRegime}
 					lmnpSubRegime={project.lmnpSubRegime ?? 'regime_reel_simplifie'}
-					annualRevenueAfterVacancy={annualRevenueAfterVacancy}
-					firstYearTaxAndPs={firstYearTaxAndPs}
-					firstYearWithTax={firstYearWithTax}
-					firstYearTaxAmount={firstYearTaxAmount}
+					{annualRevenueAfterVacancy}
+					{simulationResult}
 				/>
 			</div>
 		</div>
 	</div>
 
-	{#if simulationResult}
-		<ResultsSection
-			{simulationResult}
-			loanAmount={financing.loanAmount}
-			loanDuration={financing.loanDuration}
-		/>
-
-		<footer
-			class="fixed inset-x-0 bottom-0 z-10 border-t border-slate-700 bg-slate-800 text-white px-5 py-3 shadow-lg"
-		>
-			<div
-				class="max-w-7xl mx-auto flex flex-wrap items-center justify-center gap-6 md:gap-12"
-			>
-				<div class="text-center">
-					<p class="text-slate-400 text-sm">Cash-flow mensuel (an 1)</p>
-					<p
-						class="text-lg font-semibold {monthlyCashflow >= 0
-							? 'text-emerald-400'
-							: 'text-rose-400'}"
-					>
-						{monthlyCashflow.toLocaleString('fr-FR', {
-							minimumFractionDigits: 2,
-							maximumFractionDigits: 2
-						})} €
-					</p>
-				</div>
-				<span class="text-slate-500 hidden md:inline">|</span>
-				<div class="text-center">
-					<p class="text-slate-400 text-sm">Cash-flow annuel (an 1)</p>
-					<p
-						class="text-lg font-semibold {firstYearNet >= 0
-							? 'text-emerald-400'
-							: 'text-rose-400'}"
-					>
-						{firstYearNet.toLocaleString('fr-FR', {
-							minimumFractionDigits: 2,
-							maximumFractionDigits: 2
-						})} €
-					</p>
-				</div>
-				<span class="text-slate-500 hidden md:inline">|</span>
-				<div class="text-center">
-					<p class="text-slate-400 text-sm">Coût total du projet</p>
-					<p class="text-lg font-semibold text-white">
-						{simulationResult.total_investment.toLocaleString('fr-FR')} €
-					</p>
-				</div>
-			</div>
-		</footer>
-	{/if}
 </main>
+
+{#if simulationResult}
+	<Footer
+		{monthlyCashflow}
+		revenues={annualRevenueAfterVacancy}
+		totalProjectCost={costs.totalProjectCostWithInterest ?? totalProjectCost}
+		charges={charges.chargesUsedForCalculation ?? 0}
+		{simulationResult}
+		loanAmount={financing.loanAmount}
+		loanDuration={financing.loanDuration}
+	/>
+{/if}

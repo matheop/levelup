@@ -26,8 +26,8 @@
   const trendClasses: Record<Trend, string> = {
     neutral: 'bg-slate-50 border-slate-200 text-slate-800',
     info: 'bg-indigo-50 border-indigo-200 text-indigo-800',
-    positive: 'bg-emerald-50 border-emerald-200 text-emerald-800',
-    negative: 'bg-rose-50 border-rose-200 text-rose-800'
+    positive: 'bg-green-50 border-green-200 text-green-800',
+    negative: 'bg-red-50 border-red-200 text-red-800'
   };
 </script>
 

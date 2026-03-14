@@ -4,6 +4,7 @@
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { RevenueSectionState, RentEntry, OtherIncomeEntry } from './sectionTypes';
+	import Sumup from '../layout/Sumup.svelte';
 
 	let { revenue = $bindable() } = $props<{
 		revenue: RevenueSectionState;
@@ -114,11 +115,6 @@
 		>+ Ajouter un autre revenu</button
 	>
 	{#snippet footer()}
-		<div class="flex justify-between items-center w-full">
-			<span class="font-medium text-slate-700">Total revenus annuels</span>
-			<span class="text-lg font-semibold text-slate-900"
-				>{totalAnnualRevenue.toLocaleString('fr-FR')} €</span
-			>
-		</div>
+		<Sumup title="Total revenus annuels" cost={totalAnnualRevenue} />
 	{/snippet}
 </SectionCard>

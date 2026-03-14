@@ -2,6 +2,7 @@
 	import Select from '$lib/components/form/Select.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import type { TaxesSectionState } from './sectionTypes';
+	import type { SimulationResult, YearResult } from '$lib/calculations';
 
 	const LMNP_ABATTEMENT = 0.5; // 50 % LMLD
 	const EXAMPLE_REVENUE = 10_000;
@@ -11,21 +12,16 @@
 		taxRegime,
 		lmnpSubRegime = 'regime_reel_simplifie',
 		annualRevenueAfterVacancy = 0,
-		/** Coût IR + PS année 1 (régime réel uniquement, depuis la simulation). */
-		firstYearTaxAndPs = null,
-		/** Première année où impôts + PS > 0 (régime réel). */
-		firstYearWithTax = null,
-		/** Montant IR + PS cette année-là. */
-		firstYearTaxAmount = null
+		simulationResult,
 	} = $props<{
 		taxes: TaxesSectionState;
 		taxRegime: 'LMNP' | 'NU' | 'SCI_IS';
 		lmnpSubRegime?: 'micro_bic' | 'regime_reel_simplifie';
 		annualRevenueAfterVacancy?: number;
-		firstYearTaxAndPs?: number | null;
-		firstYearWithTax?: number | null;
-		firstYearTaxAmount?: number | null;
+		simulationResult: SimulationResult | null;
 	}>();
+
+	const firstYearResult = $derived(simulationResult?.resultsByYear[0]);
 
 	// Tranches marginales IR typiques (taux en décimal)
 	const bracketOptions = [
@@ -53,6 +49,28 @@
 	const taxableBaseMicro = $derived(Math.max(0, annualRevenueAfterVacancy * LMNP_ABATTEMENT));
 	const annualTaxCostMicro = $derived(
 		taxableBaseMicro * (taxes.taxBracketRate + taxes.socialContributionsRate)
+	);
+
+	// Première année où impôts + PS > 0 (pour LMNP régime réel)
+	const firstYearWithTax = $derived.by(() => {
+		const rows = simulationResult?.resultsByYear ?? [];
+		const found = rows.find(
+			(r: YearResult) => r.gross_cashflow - r.net_cashflow > 0.01
+		);
+		return found != null ? found.year : null;
+	});
+	const firstYearTaxAmount = $derived.by(() => {
+		if (firstYearWithTax == null) return null;
+		const row = simulationResult?.resultsByYear?.find(
+			(r: YearResult) => r.year === firstYearWithTax
+		);
+		return row != null ? row.gross_cashflow - row.net_cashflow : null;
+	});
+
+	const firstYearTaxAndPs = $derived(
+		firstYearResult != null
+			? firstYearResult.gross_cashflow - firstYearResult.net_cashflow
+			: null
 	);
 
 	const infoContentMicro = $derived(
