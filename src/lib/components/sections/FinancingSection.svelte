@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { monthlyPayment, totalInterest } from '$lib/calculations';
-	import FormField from '$lib/components/form/FormField.svelte';
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
@@ -40,27 +39,11 @@
 		/>
 	</div>
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-		<FormField id="loan-amount" label="Montant emprunté (€)">
-			<Input id="loan-amount" type="number" min={0} bind:value={financing.loanAmount} />
-		</FormField>
-		<FormField id="interest-rate" label="Taux annuel (ex: 0.034)">
-			<Input id="interest-rate" type="number" step={0.001} min={0} bind:value={financing.interestRate} />
-		</FormField>
-		<FormField id="loan-duration" label="Durée (années)">
-			<Input id="loan-duration" type="number" min={1} bind:value={financing.loanDuration} />
-		</FormField>
-		<FormField id="loan-deferral" label="Différé (mois)">
-			<Input id="loan-deferral" type="number" min={0} bind:value={financing.loanDeferralMonths} />
-		</FormField>
-		<FormField id="loan-insurance" label="Assurance emprunteur (€/mois)">
-			<Input
-				id="loan-insurance"
-				type="number"
-				min={0}
-				step={0.01}
-				bind:value={financing.loanInsuranceMonthly}
-			/>
-		</FormField>
+		<Input label="Montant emprunté (€)" id="loan-amount" type="number" min={0} bind:value={financing.loanAmount} />
+		<Input label="Taux annuel (ex: 0.034)" id="interest-rate" type="number" step={0.001} min={0} bind:value={financing.interestRate} />
+		<Input label="Durée (années)" id="loan-duration" type="number" min={1} bind:value={financing.loanDuration} />
+		<Input label="Différé (mois)" id="loan-deferral" type="number" min={0} bind:value={financing.loanDeferralMonths} />
+		<Input label="Assurance emprunteur (€/mois)" id="loan-insurance" type="number" min={0} step={0.01} bind:value={financing.loanInsuranceMonthly} />
 	</div>
 	<div class="mt-4 pt-4 border-t border-slate-200 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
 		<StatCard

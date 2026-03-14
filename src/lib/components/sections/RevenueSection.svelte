@@ -1,5 +1,4 @@
 <script lang="ts">
-	import FormField from '$lib/components/form/FormField.svelte';
 	import Input from '$lib/components/form/Input.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
@@ -67,17 +66,7 @@
 		/>
 	</div>
 	<div class="mb-4">
-		<FormField id="vacancy-rate" label="Vacance locative (%)">
-			<Input
-				id="vacancy-rate"
-				type="number"
-				step={0.01}
-				min={0}
-				max={1}
-				bind:value={revenue.vacancyRate}
-				className="max-w-[120px]"
-			/>
-		</FormField>
+		<Input label="Vacance locative (%)" id="vacancy-rate" type="number" step={0.01} min={0} max={1} bind:value={revenue.vacancyRate} className="max-w-[120px]" />
 	</div>
 	<div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4 text-sm">
 		<StatCard

@@ -1,5 +1,4 @@
 <script lang="ts">
-	import FormField from '$lib/components/form/FormField.svelte';
 	import Select from '$lib/components/form/Select.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
 	import type { TaxesSectionState } from './sectionTypes';
@@ -100,25 +99,8 @@
 
 {#if taxRegime === 'LMNP'}
 	<SectionCard title="Impôts et prélèvements" infoContent={infoContent}>
-		{#if isMicro}
-			<p class="text-sm text-slate-600 mb-4">
-				Régime LMNP micro-BIC avec abattement 50 % (location meublée longue durée, LMLD). Prélèvements
-				sociaux au taux 2026.
-			</p>
-		{:else}
-			<p class="text-sm text-slate-600 mb-4">
-				Régime réel simplifié : charges, frais d'acquisition (amort. 10 ans), intérêts d'emprunt déductibles ;
-				déficit reportable 10 ans ; amortissement sans créer de déficit.
-			</p>
-		{/if}
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-			<FormField id="tax-bracket" label="Tranche marginale d'imposition (IR)">
-				<Select
-					id="tax-bracket"
-					bind:value={taxBracketStr}
-					options={bracketOptions}
-				/>
-			</FormField>
+			<Select label="Tranche marginale d'imposition (IR)" id="tax-bracket" bind:value={taxBracketStr} options={bracketOptions} />
 			<div class="flex flex-col justify-end">
 				<p class="text-sm text-slate-600">Prélèvements sociaux</p>
 				<p class="font-semibold text-slate-800">
