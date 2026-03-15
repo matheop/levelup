@@ -19,7 +19,7 @@
 <SectionCard title="Projet & financement">
 	<SectionSubtitle
 		title="1. Le bien et/ou les travaux"
-		infoContent={PROJECT_COST_INFO	}
+		infoContent={PROJECT_COST_INFO}
 	/>
 	<div class="space-y-4 mb-6">
 		<ProjetSection project={project} embedded />

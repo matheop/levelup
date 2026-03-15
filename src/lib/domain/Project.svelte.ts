@@ -1,7 +1,7 @@
 import type { TaxRegimeName } from '$lib/dbTypes';
 import type { SimulationInput } from '$lib/calculations';
 import type { ProjectType } from '$lib/dbTypes';
-import type { LmnpSubRegime } from '$lib/types';
+import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 import { getAmortizationData } from '$lib/components/sections/amortizationCalc';
 import { Cost } from './Cost.svelte';
 import { Financing } from './Financing.svelte';
@@ -18,7 +18,7 @@ export class Project {
 	projectName = $state('');
 	projectType = $state<ProjectType>('purchase');
 	taxRegime = $state<TaxRegimeName>('LMNP');
-	lmnpSubRegime = $state<LmnpSubRegime>('reel_simplifie');
+	lmnpSubRegime = $state<LmnpSubRegime>(LMNP_SUB_REGIMES.reel_simplifie);
 
 	cost: Cost;
 	financings = $state<Financing[]>([]);
@@ -139,7 +139,7 @@ export class Project {
 			projectName: 'Project Test',
 			projectType: 'purchase',
 			taxRegime: 'LMNP',
-			lmnpSubRegime: 'reel_simplifie',
+			lmnpSubRegime: LMNP_SUB_REGIMES.reel_simplifie,
 			cost: {
 				purchasePrice: 120000,
 				notaryFees: 10000,

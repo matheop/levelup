@@ -7,6 +7,7 @@
 	import { getTaxesInfoContent } from './taxesSectionInfo';
 	import type { Project } from '$lib/domain';
 	import type { SimulationResult } from '$lib/calculations';
+	import { LMNP_SUB_REGIMES } from '$lib/constants';
 
 	let { project, simulationResult = null } = $props<{
 		project: Project;
@@ -19,7 +20,7 @@
 				taxBracketRate: project.taxes.taxBracketRate,
 				socialContributionsRate: project.taxes.socialContributionsRate
 			},
-			project.lmnpSubRegime ?? 'reel_simplifie'
+			project.lmnpSubRegime ?? LMNP_SUB_REGIMES.reel_simplifie
 		)
 	);
 </script>

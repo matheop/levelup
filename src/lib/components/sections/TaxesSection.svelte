@@ -5,18 +5,19 @@
 	import type { SimulationResult, YearResult } from '$lib/calculations';
 	import { getTaxesInfoContent } from './taxesSectionInfo';
 	import { LMNP_TAX_ALLOWANCE_RATE } from '$lib/constants';
+	import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 
 	let {
 		taxes,
 		taxRegime,
-		lmnpSubRegime = 'reel_simplifie',
+		lmnpSubRegime = LMNP_SUB_REGIMES.reel_simplifie,
 		annualRevenueAfterVacancy = 0,
 		simulationResult,
 		embedded = false,
 	} = $props<{
 		taxes: Taxes;
 		taxRegime: 'LMNP' | 'NU' | 'SCI_IS';
-		lmnpSubRegime?: 'micro_bic' | 'reel_simplifie';
+		lmnpSubRegime?: LmnpSubRegime;
 		annualRevenueAfterVacancy?: number;
 		simulationResult: SimulationResult | null;
 		embedded?: boolean;

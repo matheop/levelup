@@ -7,6 +7,7 @@ import { cashflowForYear } from './cashflow';
 import type { DepreciationRow } from './depreciation';
 import type { LoanParams } from './loan';
 import { irr } from './irr';
+import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 
 export interface SimulationInput {
 	regime: TaxRegimeName;
@@ -16,7 +17,7 @@ export interface SimulationInput {
 	/** LMNP only: marginal tax bracket (e.g. 0.30 for 30 %). */
 	tax_bracket_rate?: number | null;
 	/** LMNP only: micro_bic (abattement 50 %) or reel_simplifie (défaut). */
-	lmnp_sub_regime?: 'micro_bic' | 'reel_simplifie';
+	lmnp_sub_regime?: LmnpSubRegime;
 	/** Frais d'acquisition pour LMNP régime réel (amort. 10 ans). */
 	notary_fees?: number;
 	agency_fees?: number;
@@ -67,7 +68,7 @@ export function simulateProject(
 ): SimulationResult {
 	const resultsByYear: YearResult[] = [];
 	let lmnpReelCf: { deficit: number; depreciation: number } | undefined =
-		input.regime === 'LMNP' && input.lmnp_sub_regime === 'reel_simplifie'
+		input.regime === 'LMNP' && input.lmnp_sub_regime === LMNP_SUB_REGIMES.reel_simplifie
 			? { deficit: 0, depreciation: 0 }
 			: undefined;
 

@@ -1,6 +1,6 @@
 import type { Taxes } from "$lib/domain";
 import { LMNP_TAX_ALLOWANCE_RATE } from "$lib/constants";
-import type { LmnpSubRegime } from "$lib/types";
+import type { LmnpSubRegime } from "$lib/constants";
 
 const EXAMPLE_REVENUE = 10_000;
 

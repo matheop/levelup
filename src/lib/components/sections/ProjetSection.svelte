@@ -2,6 +2,7 @@
 	import Input from '$lib/components/form/Input.svelte';
 	import Select from '$lib/components/form/Select.svelte';
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
+	import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 	import type { Project } from '$lib/domain';
 
 	let { project, embedded = false } = $props<{
@@ -10,13 +11,11 @@
 	}>();
 
 	let lmnpSubRegimeStr = $derived(
-		(project.lmnpSubRegime ?? 'reel_simplifie') as string
+		(project.lmnpSubRegime ?? LMNP_SUB_REGIMES.reel_simplifie) as string
 	);
 	
 	$effect(() => {
-		project.lmnpSubRegime = (lmnpSubRegimeStr || 'reel_simplifie') as
-			| 'micro_bic'
-			| 'reel_simplifie';
+		project.lmnpSubRegime = (lmnpSubRegimeStr || LMNP_SUB_REGIMES.reel_simplifie) as LmnpSubRegime
 	});
 </script>
 
@@ -34,8 +33,8 @@
 		]} />
 		{#if project.taxRegime === 'LMNP'}
 			<Select label="Régime LMNP" id="lmnp-sub-regime-emb" bind:value={lmnpSubRegimeStr} options={[
-				{ value: 'reel_simplifie', label: 'Régime réel simplifié' },
-				{ value: 'micro_bic', label: 'Micro-BIC (abattement 50 %)' }
+				{ value: LMNP_SUB_REGIMES.reel_simplifie, label: 'Régime réel simplifié' },
+				{ value: LMNP_SUB_REGIMES.micro_bic, label: 'Micro-BIC (abattement 50 %)' }
 			]} />
 		{/if}
 	</div>
@@ -54,8 +53,8 @@
 		]} />
 		{#if project.taxRegime === 'LMNP'}
 			<Select label="Régime LMNP" id="lmnp-sub-regime" bind:value={lmnpSubRegimeStr} options={[
-				{ value: 'reel_simplifie', label: 'Régime réel simplifié' },
-				{ value: 'micro_bic', label: 'Micro-BIC (abattement 50 %)' }
+				{ value: LMNP_SUB_REGIMES.reel_simplifie, label: 'Régime réel simplifié' },
+				{ value: LMNP_SUB_REGIMES.micro_bic, label: 'Micro-BIC (abattement 50 %)' }
 			]} />
 		{/if}
 	</div>

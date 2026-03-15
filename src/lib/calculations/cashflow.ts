@@ -2,6 +2,7 @@
  * Revenue, expense, tax and cash-flow calculations by tax regime.
  */
 
+import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 import type { TaxRegimeName } from '$lib/dbTypes';
 import { annualDepreciationTotal } from './depreciation';
 import type { DepreciationRow } from './depreciation';
@@ -145,7 +146,7 @@ export function cashflowForYear(params: {
 	notary_fees?: number;
 	agency_fees?: number;
 	/** micro_bic = abattement 50 % ; reel_simplifie = charges + amort + déficit reportable. */
-	lmnp_sub_regime?: 'micro_bic' | 'reel_simplifie';
+	lmnp_sub_regime?: LmnpSubRegime;
 }): {
 	gross_cashflow: number;
 	net_cashflow: number;
@@ -163,7 +164,7 @@ export function cashflowForYear(params: {
 	const acquisitionAmortAnnual = acquisitionFees / LMNP_ACQUISITION_AMORT_YEARS;
 
 	const isLmnpReel =
-		params.regime === 'LMNP' && params.lmnp_sub_regime === 'reel_simplifie';
+		params.regime === 'LMNP' && params.lmnp_sub_regime === LMNP_SUB_REGIMES.reel_simplifie;
 
 	let taxableResult: number;
 	let tax = 0;
@@ -211,7 +212,7 @@ export function cashflowForYear(params: {
 			params.socialContributionsRate,
 			params.isTaxRate,
 			params.taxBracketRate ?? null,
-			params.regime === 'LMNP' && params.lmnp_sub_regime !== 'reel_simplifie'
+			params.regime === 'LMNP' && params.lmnp_sub_regime !== LMNP_SUB_REGIMES.reel_simplifie
 				? revenues
 				: null
 		);
