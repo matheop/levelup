@@ -50,13 +50,13 @@
       default:
         'border border-slate-600/80 bg-slate-700/50 text-slate-200 shadow-sm hover:bg-slate-600/70 hover:text-white',
       danger:
-        'border border-red-500/80 bg-red-600/50 text-red-100 shadow-sm hover:bg-red-600/70 hover:text-white'
+        'border border-red-500/80 bg-red-600/50 text-red-200 shadow-sm hover:bg-red-600/70 hover:text-white'
     },
     outline: {
       default:
         'border border-slate-600/80 bg-transparent text-slate-200 hover:bg-slate-600/30',
       danger:
-        'border border-red-500/80 bg-transparent text-red-300 hover:bg-red-500/20'
+        'border border-red-500/80 bg-transparent text-red-400 hover:bg-red-500/20'
     },
     transparent: {
       default: 'bg-transparent text-slate-200 hover:bg-slate-600/20',
@@ -74,7 +74,7 @@
 
 <button
   type={type}
-  class="{base} {sizeClasses[size as Size]} {variantClasses} {className}"
+  class="Button-{variant}-{tone} {base} {sizeClasses[size as Size]} {variantClasses} {className}"
   {disabled}
   onclick={onClick}
 >

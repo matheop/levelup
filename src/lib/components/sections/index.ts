@@ -9,4 +9,5 @@ export { default as ChargesAndWorksSection } from './ChargesAndWorksSection.svel
 export { default as TaxesSection } from './TaxesSection.svelte';
 export { default as AmortizationSection } from './AmortizationSection.svelte';
 export { default as AmortizationAndTaxesSection } from './AmortizationAndTaxesSection.svelte';
+export { default as FinancingComparisonSection } from './FinancingComparisonSection.svelte';
 export { default as ResultsSection } from './ResultsSection.svelte';

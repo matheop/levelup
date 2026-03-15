@@ -4,15 +4,20 @@
 		ProjectFinancingSection,
 		RevenueSection,
 		AmortizationAndTaxesSection,
-		ChargesAndWorksSection
+		ChargesAndWorksSection,
+		FinancingComparisonSection
 	} from '$lib/components/sections';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 
 	let project = $state(Project.createDefault());
 
-	const simulationResult = $derived(project.simulate());
-
+	const simulationResultsByFinancing = $derived(
+		project.financings.map((f) => project.simulateForFinancing(f))
+	);
+	const simulationResult = $derived(
+		simulationResultsByFinancing[0] ?? project.simulate()
+	);
 	const monthlyCashflow = $derived(project.getMonthlyNetCashflow(1));
 </script>
 
@@ -38,6 +43,12 @@
 				<ChargesAndWorksSection project={project} />
 			</div>
 		</div>
+	</div>
+	<div class="mt-6 w-full max-w-5xl mx-auto">
+		<FinancingComparisonSection
+			{project}
+			simulationResultsByFinancing={simulationResultsByFinancing}
+		/>
 	</div>
 </main>
 

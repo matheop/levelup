@@ -76,15 +76,21 @@ export class Project {
 		return this.revenue.annualRevenueAfterVacancy;
 	}
 
-	get futureWorksAnnualAverage(): number {
-		const duration = this.primaryFinancing.loanDuration || 20;
+	/** Moyenne annuelle des travaux futurs pour une durée d'horizon donnée (ex. durée du prêt). */
+	getFutureWorksAnnualAverageForDuration(duration: number): number {
+		const d = duration || 20;
 		return this.futureWorks.length === 0
 			? 0
 			: this.futureWorks.reduce(
-					(s, w) =>
-						s + w.estimated_cost / (w.frequency_years || duration),
+					(s, w) => s + w.estimated_cost / (w.frequency_years || d),
 					0
 				);
+	}
+
+	get futureWorksAnnualAverage(): number {
+		return this.getFutureWorksAnnualAverageForDuration(
+			this.primaryFinancing.loanDuration || 20
+		);
 	}
 
 	/** Charges annuelles récurrentes + coûts annualisés des travaux futurs. */
@@ -144,17 +150,32 @@ export class Project {
 		return this.getCashflowForYear(year).net_cashflow / 12;
 	}
 
-	/** Lance la simulation sur la durée du prêt (ou years si fourni). */
-	simulate(years?: number): SimulationResult {
-		const input = this.buildSimulationInput();
-		const n = years ?? (this.primaryFinancing.loanDuration || 20);
+	/** Lance la simulation pour un financement donné (sur sa durée). */
+	simulateForFinancing(financing: Financing): SimulationResult {
+		const input = this.buildSimulationInputForFinancing(financing);
+		const n = financing.loanDuration || 20;
 		return simulateProject(input, n);
 	}
 
+	/** Lance la simulation sur la durée du premier prêt. Délègue au premier financement. */
+	simulate(): SimulationResult {
+		return this.simulateForFinancing(this.primaryFinancing);
+	}
+
+	/** Coût total du projet + intérêts et assurance pour un financement donné. */
+	getTotalCostWithInterestForFinancing(financing: Financing): number {
+		return this.totalProjectCost + financing.creditInterestTotal();
+	}
+
 	buildSimulationInput(): SimulationInput {
+		return this.buildSimulationInputForFinancing(this.primaryFinancing);
+	}
+
+	buildSimulationInputForFinancing(financing: Financing): SimulationInput {
 		const { depreciationRows } = getAmortizationData(this.projectType, this.cost);
 		const totalMonthlyRent = this.revenue.totalMonthlyRent;
 		const annualRentGross = totalMonthlyRent * 12 * (1 - this.revenue.vacancyRate);
+		const duration = financing.loanDuration || 20;
 		return {
 			regime: this.taxRegime,
 			vacancy_rate: this.revenue.vacancyRate,
@@ -188,9 +209,9 @@ export class Project {
 				accounting_fees: this.charges.accountingFees,
 				maintenance_provision: this.charges.maintenanceProvision
 			},
-			loan: this.primaryFinancing.toLoanParams(),
+			loan: financing.toLoanParams(),
 			depreciation: this.taxRegime === 'NU' ? [] : depreciationRows,
-			future_works_annual_average: this.futureWorksAnnualAverage,
+			future_works_annual_average: this.getFutureWorksAnnualAverageForDuration(duration),
 			total_investment: this.totalProjectCost,
 			annual_rent_gross: annualRentGross
 		};

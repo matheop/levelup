@@ -9,6 +9,7 @@ import type { LoanParams } from '$lib/calculations';
  * Méthodes de calcul déléguées à $lib/calculations/loan.
  */
 export class Financing {
+	id = $state(crypto.randomUUID());
 	loanAmount = $state(0);
 	interestRate = $state(0);
 	loanDuration = $state(0);
