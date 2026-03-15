@@ -3,7 +3,7 @@
 	import SectionSubtitle from '$lib/components/layout/SectionSubtitle.svelte';
 	import AmortizationSection from './AmortizationSection.svelte';
 	import TaxesSection from './TaxesSection.svelte';
-	import { AMORT_INFO } from './amortizationCalc';
+	import { getAmortizationInfoContent } from './amortizationCalc';
 	import { getTaxesInfoContent } from './taxesSectionInfo';
 	import type { Project } from '$lib/domain';
 	import type { SimulationResult } from '$lib/calculations';
@@ -16,25 +16,24 @@
 
 	const taxesInfoContent = $derived(
 		getTaxesInfoContent(
-			{
-				taxBracketRate: project.taxes.taxBracketRate,
-				socialContributionsRate: project.taxes.socialContributionsRate
-			},
-			project.lmnpSubRegime ?? LMNP_SUB_REGIMES.reel_simplifie
+			project.taxes,
+			project.lmnpSubRegime ?? LMNP_SUB_REGIMES.reel_simplifie,
+			project.taxRegime
 		)
 	);
+	const amortInfoContent = $derived(getAmortizationInfoContent(project.taxRegime));
 </script>
 
 {#if project.taxRegime !== 'NU'}
 	<SectionCard title="Amortissements & impôts">
-		<SectionSubtitle title="Amortissements" infoContent={AMORT_INFO} />
+		<SectionSubtitle title="Amortissements" infoContent={amortInfoContent} />
 		<AmortizationSection
 			projectType={project.projectType}
 			costs={project.cost}
 			taxRegime={project.taxRegime}
 			embedded
 		/>
-		{#if project.taxRegime === 'LMNP'}
+		{#if project.taxRegime === 'LMNP' || project.taxRegime === 'SCI_IS'}
 			<SectionSubtitle
 				title="Impôts et prélèvements"
 				infoContent={taxesInfoContent}

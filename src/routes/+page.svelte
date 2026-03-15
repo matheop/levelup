@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { simulateProject } from '$lib/calculations';
 	import { Project } from '$lib/domain';
 	import {
 		ProjectFinancingSection,
@@ -12,16 +11,9 @@
 
 	let project = $state(Project.createDefault());
 
-	const simulationResult = $derived(
-		simulateProject(
-			project.buildSimulationInput(),
-			project.primaryFinancing.loanDuration
-		)
-	);
+	const simulationResult = $derived(project.simulate());
 
-	const firstYearResult = $derived(simulationResult?.resultsByYear[0]);
-	const firstYearNet = $derived(firstYearResult?.net_cashflow ?? 0);
-	const monthlyCashflow = $derived(firstYearNet / 12);
+	const monthlyCashflow = $derived(project.getMonthlyNetCashflow(1));
 </script>
 
 <Header
@@ -54,7 +46,7 @@
 		{monthlyCashflow}
 		revenues={project.annualRevenueAfterVacancy}
 		totalProjectCost={project.totalProjectCostWithInterest}
-		charges={project.charges.chargesUsedForCalculation}
+		charges={project.annualChargesForCalculation}
 		{simulationResult}
 		loanAmount={project.primaryFinancing.loanAmount}
 		loanDuration={project.primaryFinancing.loanDuration}

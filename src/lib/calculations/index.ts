@@ -71,6 +71,8 @@ export function simulateProject(
 		input.regime === 'LMNP' && input.lmnp_sub_regime === LMNP_SUB_REGIMES.reel_simplifie
 			? { deficit: 0, depreciation: 0 }
 			: undefined;
+	let sciIsDeficitCf: number | undefined =
+		input.regime === 'SCI_IS' ? 0 : undefined;
 
 	for (let y = 1; y <= years; y++) {
 		const cf = cashflowForYear({
@@ -86,12 +88,15 @@ export function simulateProject(
 			taxBracketRate: input.tax_bracket_rate ?? null,
 			year: y,
 			lmnpReelCarryforwardIn: lmnpReelCf,
+			sciIsDeficitCarryforwardIn: sciIsDeficitCf,
 			notary_fees: input.notary_fees,
 			agency_fees: input.agency_fees,
 			lmnp_sub_regime: input.lmnp_sub_regime
 		});
 		if (cf.lmnpReelCarryforwardOut) {
 			lmnpReelCf = cf.lmnpReelCarryforwardOut;
+		} else if (cf.sciIsDeficitCarryforwardOut) {
+			sciIsDeficitCf = cf.sciIsDeficitCarryforwardOut;
 		}
 		resultsByYear.push({
 			year: y,
@@ -132,6 +137,7 @@ export {
 	annualExpenses,
 	recoverableCharges,
 	taxForRegime,
+	taxIS,
 	cashflowForYear
 } from './cashflow';
 export type { RevenueInput, ExpensesInput, LmnpReelCarryforward } from './cashflow';

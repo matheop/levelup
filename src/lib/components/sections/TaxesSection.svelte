@@ -74,18 +74,68 @@
 	);
 
 	const infoContent = $derived(
-		getTaxesInfoContent(
-			{
-				taxBracketRate: taxes.taxBracketRate,
-				socialContributionsRate: taxes.socialContributionsRate
-			},
-			lmnpSubRegime
-		)
+		getTaxesInfoContent(taxes, lmnpSubRegime, taxRegime)
 	);
 	const isMicro = $derived(lmnpSubRegime === 'micro_bic');
 </script>
 
-{#if taxRegime === 'LMNP'}
+{#if taxRegime === 'SCI_IS'}
+	{#if embedded}
+		<div class="border-slate-200 space-y-1 w-full">
+			<p class="text-sm text-slate-600">Impôt sur les sociétés (taux 15 % / 25 % selon bénéfice). Pas de prélèvements sociaux au niveau de la société.</p>
+			<div class="mt-4 pt-3 border-t border-slate-200 space-y-1 w-full">
+				<div class="flex justify-between items-center w-full">
+					<span class="font-medium text-slate-700">Impôt IS (an 1)</span>
+					<span class="text-lg font-semibold text-slate-900">
+						{#if firstYearTaxAndPs != null}
+							{firstYearTaxAndPs.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+						{:else}
+							–
+						{/if}
+					</span>
+				</div>
+				<div class="flex justify-between items-center w-full text-sm">
+					{#if firstYearWithTax != null && firstYearTaxAmount != null}
+						<span class="text-slate-600">Première année d'imposition</span>
+						<span class="font-semibold text-slate-900">
+							Année {firstYearWithTax} ({firstYearTaxAmount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €)
+						</span>
+					{:else}
+						<span class="text-slate-600">Première année d'imposition</span>
+						<span class="text-slate-500">Aucune sur la période simulée</span>
+					{/if}
+				</div>
+			</div>
+		</div>
+	{:else}
+		<SectionCard title="Impôts (IS)" infoContent={infoContent}>
+			<div class="space-y-1 w-full">
+				<p class="text-sm text-slate-600">Impôt sur les sociétés – taux tranché 15 % / 25 % (PME 2026).</p>
+				<div class="flex justify-between items-center w-full">
+					<span class="font-medium text-slate-700">Impôt IS année 1</span>
+					<span class="text-lg font-semibold text-slate-900">
+						{#if firstYearTaxAndPs != null}
+							{firstYearTaxAndPs.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €
+						{:else}
+							–
+						{/if}
+					</span>
+				</div>
+				<div class="flex justify-between items-center w-full text-sm">
+					{#if firstYearWithTax != null && firstYearTaxAmount != null}
+						<span class="text-slate-600">Première année d'imposition</span>
+						<span class="font-semibold text-slate-900">
+							Année {firstYearWithTax} ({firstYearTaxAmount.toLocaleString('fr-FR', { maximumFractionDigits: 0 })} €)
+						</span>
+					{:else}
+						<span class="text-slate-600">Première année d'imposition</span>
+						<span class="text-slate-500">Aucune sur la période simulée</span>
+					{/if}
+				</div>
+			</div>
+		</SectionCard>
+	{/if}
+{:else if taxRegime === 'LMNP'}
 	{#if embedded}
 		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			<Select label="Tranche marginale d'imposition (IR)" id="tax-bracket-emb" bind:value={taxBracketStr} options={bracketOptions} />

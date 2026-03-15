@@ -1,13 +1,28 @@
-import type { Taxes } from "$lib/domain";
-import { LMNP_TAX_ALLOWANCE_RATE } from "$lib/constants";
-import type { LmnpSubRegime } from "$lib/constants";
+import type { Taxes } from '$lib/domain';
+import { LMNP_TAX_ALLOWANCE_RATE, IS_PME_PLAFOND_BENEFICE } from '$lib/constants';
+import type { LmnpSubRegime } from '$lib/constants';
+import type { TaxRegimeName } from '$lib/dbTypes';
 
 const EXAMPLE_REVENUE = 10_000;
 
 export function getTaxesInfoContent(
 	taxes: Taxes,
-	lmnpSubRegime: LmnpSubRegime
+	lmnpSubRegime: LmnpSubRegime,
+	taxRegime?: TaxRegimeName
 ): string {
+	if (taxRegime === 'SCI_IS') {
+		return [
+			'<strong>SCI à l’impôt sur les sociétés (IS) – 2026</strong>',
+			'',
+			'• Impôt sur les sociétés uniquement (pas de prélèvements sociaux au niveau de la société).',
+			'• Taux tranché PME : 15 % sur la part des bénéfices ≤ ' +
+				IS_PME_PLAFOND_BENEFICE.toLocaleString('fr-FR') +
+				' €, puis 25 % au-delà.',
+			"• Déduction des charges, des intérêts d'emprunt (seuls, pas le capital), des frais d'acquisition amortis sur 10 ans et de l'amortissement du bien.",
+			'• Report de déficit illimité en avant.'
+		].join('\n');
+	}
+
 	const rev = EXAMPLE_REVENUE;
 	const baseLmnp = rev * LMNP_TAX_ALLOWANCE_RATE;
 	const irLmnp = baseLmnp * taxes.taxBracketRate;

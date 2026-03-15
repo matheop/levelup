@@ -1,5 +1,10 @@
 import type { TaxRegimeName } from '$lib/dbTypes';
-import type { SimulationInput } from '$lib/calculations';
+import {
+	type SimulationInput,
+	simulateProject,
+	cashflowForYear,
+	type SimulationResult
+} from '$lib/calculations';
 import type { ProjectType } from '$lib/dbTypes';
 import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
 import { getAmortizationData } from '$lib/components/sections/amortizationCalc';
@@ -91,6 +96,61 @@ export class Project {
 		return this.totalChargesAndWorksAnnual / 12;
 	}
 
+	/** Charges annuelles pour le calcul (charges retenues + moyenne travaux futurs). Alias de totalChargesAndWorksAnnual. */
+	get annualChargesForCalculation(): number {
+		return this.totalChargesAndWorksAnnual;
+	}
+
+	/** Mensualité crédit + assurance. */
+	get monthlyPaymentWithInsurance(): number {
+		return this.primaryFinancing.monthlyPayment() + (this.primaryFinancing.loanInsuranceMonthly ?? 0);
+	}
+
+	/**
+	 * Cash-flow pour une année donnée (1-based).
+	 * Pour LMNP régime réel, le report de déficit n'est pris en compte que lorsqu'on enchaîne les années via simulate().
+	 */
+	getCashflowForYear(year: number): {
+		gross_cashflow: number;
+		net_cashflow: number;
+		tax_deductible_deficit: number;
+	} {
+		const input = this.buildSimulationInput();
+		const cf = cashflowForYear({
+			revenue: input.revenue,
+			expenses: input.expenses,
+			vacancy_rate: input.vacancy_rate,
+			loanParams: input.loan,
+			depreciationRows: input.depreciation,
+			futureWorksAnnualAverage: input.future_works_annual_average,
+			regime: input.regime,
+			socialContributionsRate: input.social_contributions_rate,
+			isTaxRate: input.is_tax_rate,
+			taxBracketRate: input.tax_bracket_rate ?? null,
+			year,
+			notary_fees: input.notary_fees,
+			agency_fees: input.agency_fees,
+			lmnp_sub_regime: input.lmnp_sub_regime
+		});
+		return {
+			gross_cashflow: cf.gross_cashflow,
+			net_cashflow: cf.net_cashflow,
+			tax_deductible_deficit: cf.tax_deductible_deficit
+		};
+	}
+
+	/** Cash-flow net mensuel pour une année (année 1-based). */
+	getMonthlyNetCashflow(year: number): number {
+		return this.getCashflowForYear(year).net_cashflow / 12;
+	}
+
+	/** Lance la simulation sur la durée du prêt (ou years si fourni). */
+	simulate(years?: number): SimulationResult {
+		const input = this.buildSimulationInput();
+		const n = years ?? (this.primaryFinancing.loanDuration || 20);
+		return simulateProject(input, n);
+	}
+
 	buildSimulationInput(): SimulationInput {
 		const { depreciationRows } = getAmortizationData(this.projectType, this.cost);
 		const totalMonthlyRent = this.revenue.totalMonthlyRent;
@@ -105,11 +165,13 @@ export class Project {
 			lmnp_sub_regime:
 				this.taxRegime === 'LMNP' ? this.lmnpSubRegime : undefined,
 			notary_fees:
-				this.taxRegime === 'LMNP' && this.projectType === 'purchase'
+				this.projectType === 'purchase' &&
+				(this.taxRegime === 'LMNP' || this.taxRegime === 'SCI_IS')
 					? this.cost.notaryFees
 					: undefined,
 			agency_fees:
-				this.taxRegime === 'LMNP' && this.projectType === 'purchase'
+				this.projectType === 'purchase' &&
+				(this.taxRegime === 'LMNP' || this.taxRegime === 'SCI_IS')
 					? (this.cost.agencyFees ?? 0)
 					: undefined,
 			revenue: {

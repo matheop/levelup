@@ -2,7 +2,13 @@
  * Revenue, expense, tax and cash-flow calculations by tax regime.
  */
 
-import { LMNP_SUB_REGIMES, type LmnpSubRegime } from '$lib/constants';
+import {
+	LMNP_SUB_REGIMES,
+	IS_PME_PLAFOND_BENEFICE,
+	IS_TAUX_REDUIT,
+	IS_TAUX_NORMAL,
+	type LmnpSubRegime
+} from '$lib/constants';
 import type { TaxRegimeName } from '$lib/dbTypes';
 import { annualDepreciationTotal } from './depreciation';
 import type { DepreciationRow } from './depreciation';
@@ -11,6 +17,17 @@ import type { LoanParams } from './loan';
 
 const DEFICIT_FONCIER_CAP = 10_700; // €/year
 const LMNP_ACQUISITION_AMORT_YEARS = 10; // frais d'acquisition (notaire, agence) sur 10 ans
+
+/**
+ * Impôt sur les sociétés (SCI IS) 2026 : taux tranché PME.
+ * 15 % sur la part des bénéfices ≤ 42 500 €, 25 % au-delà.
+ */
+export function taxIS(benefice: number): number {
+	if (benefice <= 0) return 0;
+	const partReduite = Math.min(benefice, IS_PME_PLAFOND_BENEFICE);
+	const partNormale = Math.max(0, benefice - IS_PME_PLAFOND_BENEFICE);
+	return partReduite * IS_TAUX_REDUIT + partNormale * IS_TAUX_NORMAL;
+}
 
 export interface RevenueInput {
 	monthly_rent: number | null;
@@ -147,11 +164,14 @@ export function cashflowForYear(params: {
 	agency_fees?: number;
 	/** micro_bic = abattement 50 % ; reel_simplifie = charges + amort + déficit reportable. */
 	lmnp_sub_regime?: LmnpSubRegime;
+	/** SCI IS : déficit reporté (illimité en avant). */
+	sciIsDeficitCarryforwardIn?: number;
 }): {
 	gross_cashflow: number;
 	net_cashflow: number;
 	tax_deductible_deficit: number;
 	lmnpReelCarryforwardOut?: LmnpReelCarryforward;
+	sciIsDeficitCarryforwardOut?: number;
 } {
 	const revenues = annualRevenues(params.revenue, params.vacancy_rate);
 	const expenses = annualExpenses(params.expenses, params.futureWorksAnnualAverage);
@@ -171,8 +191,30 @@ export function cashflowForYear(params: {
 	let socialContributions = 0;
 	let taxDeductibleDeficit = 0;
 	let lmnpReelCarryforwardOut: LmnpReelCarryforward | undefined;
+	let sciIsDeficitCarryforwardOut: number | undefined;
 
-	if (isLmnpReel) {
+	if (params.regime === 'SCI_IS') {
+		// SCI à l'IS : seule la part intérêts est déductible ; amort. frais d'acquisition 10 ans ; taux tranché 15 % / 25 % ; report de déficit illimité.
+		const loanInterest = annualInterestForYear(params.loanParams, year);
+		const resultBeforeDeficit =
+			revenues -
+			expenses -
+			loanInterest -
+			acquisitionAmortAnnual -
+			depreciationTotal;
+		const deficitIn = params.sciIsDeficitCarryforwardIn ?? 0;
+		if (resultBeforeDeficit < 0) {
+			sciIsDeficitCarryforwardOut = deficitIn + -resultBeforeDeficit;
+			taxableResult = 0;
+			tax = 0;
+		} else {
+			const useDeficit = Math.min(deficitIn, resultBeforeDeficit);
+			taxableResult = resultBeforeDeficit - useDeficit;
+			sciIsDeficitCarryforwardOut = deficitIn - useDeficit;
+			tax = taxIS(Math.max(0, taxableResult));
+		}
+		socialContributions = 0;
+	} else if (isLmnpReel) {
 		const loanInterest = annualInterestForYear(params.loanParams, year);
 		const resultBeforeDepreciation =
 			revenues - expenses - loanInterest - acquisitionAmortAnnual;
@@ -229,6 +271,9 @@ export function cashflowForYear(params: {
 		tax_deductible_deficit: taxDeductibleDeficit,
 		...(lmnpReelCarryforwardOut !== undefined && {
 			lmnpReelCarryforwardOut
+		}),
+		...(sciIsDeficitCarryforwardOut !== undefined && {
+			sciIsDeficitCarryforwardOut
 		})
 	};
 }

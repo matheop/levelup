@@ -3,7 +3,7 @@
 	import type { Cost } from '$lib/domain';
 	import type { ProjectType } from '$lib/dbTypes';
 	import type { TaxRegimeName } from '$lib/dbTypes';
-	import { getAmortizationData, AMORT_INFO } from './amortizationCalc';
+	import { getAmortizationData, getAmortizationInfoContent } from './amortizationCalc';
 
 	let { projectType, costs, taxRegime, embedded = false } = $props<{
 		projectType: ProjectType;
@@ -13,6 +13,7 @@
 	}>();
 
 	const { lines: amortizationLines } = $derived(getAmortizationData(projectType, costs));
+	const amortInfoContent = $derived(getAmortizationInfoContent(taxRegime));
 </script>
 
 {#if taxRegime !== 'NU'}
@@ -60,7 +61,7 @@
 	{:else}
 	<SectionCard
 		title="Amortissements"
-		infoContent={AMORT_INFO}
+		infoContent={amortInfoContent}
 		variant="success"
 	>
 		<div class="overflow-x-auto">
