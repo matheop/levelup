@@ -1,10 +1,12 @@
 <script lang="ts">
 	import type { TaxRegimeName } from '$lib/dbTypes';
+	import Button from '$lib/components/ui/Button.svelte';
 
-	const { projectName, projectType, taxRegime } = $props<{
+	const { projectName, projectType, taxRegime, onSignOut } = $props<{
 		projectName: string;
 		projectType: 'purchase' | 'renovation_only';
 		taxRegime: TaxRegimeName;
+		onSignOut?: () => void | Promise<void>;
 	}>();
 
 	const projectTypeLabel = $derived(
@@ -29,24 +31,34 @@
 		aria-hidden="true"
 	></div>
 
-	<div class="relative flex flex-wrap items-center gap-3 py-4 px-5 md:gap-5 md:px-6">
-		<h1 class="text-lg font-semibold tracking-tight text-white md:text-xl">
-			{projectName || 'Sans nom'}
-		</h1>
+	<div
+		class="relative flex flex-wrap items-center justify-between gap-3 py-4 px-5 md:gap-5 md:px-6"
+	>
+		<div class="flex min-w-0 flex-wrap items-center gap-3 md:gap-5">
+			<h1 class="text-lg font-semibold tracking-tight text-white md:text-xl">
+				{projectName || 'Sans nom'}
+			</h1>
 
-		<div class="flex items-center gap-2 text-slate-400">
-			<span class="hidden size-1 rounded-full bg-slate-500 sm:inline" aria-hidden="true"></span>
-			<span
-				class="rounded-md border border-slate-600/80 bg-slate-700/50 px-2.5 py-1 text-xs font-medium text-slate-200"
-			>
-				{projectTypeLabel}
-			</span>
-			<span class="size-1 rounded-full bg-slate-500" aria-hidden="true"></span>
-			<span
-				class="rounded-md border border-slate-600/80 bg-slate-700/50 px-2.5 py-1 text-xs font-medium text-slate-200"
-			>
-				{taxRegimeLabel}
-			</span>
+			<div class="flex items-center gap-2 text-slate-400">
+				<span class="hidden size-1 rounded-full bg-slate-500 sm:inline" aria-hidden="true"></span>
+				<span
+					class="rounded-md border border-slate-600/80 bg-slate-700/50 px-2.5 py-1 text-xs font-medium text-slate-200"
+				>
+					{projectTypeLabel}
+				</span>
+				<span class="size-1 rounded-full bg-slate-500" aria-hidden="true"></span>
+				<span
+					class="rounded-md border border-slate-600/80 bg-slate-700/50 px-2.5 py-1 text-xs font-medium text-slate-200"
+				>
+					{taxRegimeLabel}
+				</span>
+			</div>
 		</div>
+
+		{#if onSignOut}
+			<div class="flex w-full shrink-0 justify-end sm:w-auto">
+				<Button variant="outline" tone="inverse" label="Se déconnecter" onClick={onSignOut} />
+			</div>
+		{/if}
 	</div>
 </header>

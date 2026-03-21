@@ -3,6 +3,15 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import ResultsSection from '$lib/components/sections/ResultsSection.svelte';
 
+	type PersistDockProps = {
+		visible: boolean;
+		isPersisted: boolean;
+		hasUnsavedChanges: boolean;
+		onSave: () => void | Promise<void>;
+		onDelete: () => void | Promise<void>;
+		persisting: boolean;
+	};
+
 	const {
 		monthlyCashflow,
 		revenues,
@@ -10,7 +19,8 @@
 		charges,
 		simulationResult = null,
 		loanAmount = 0,
-		loanDuration = 20
+		loanDuration = 20,
+		persistDock = null
 	} = $props<{
 		monthlyCashflow: number;
 		revenues: number;
@@ -19,7 +29,13 @@
 		simulationResult?: SimulationResult | null;
 		loanAmount?: number;
 		loanDuration?: number;
+		persistDock?: PersistDockProps | null;
 	}>();
+
+	const statsBarVisible = $derived(simulationResult != null);
+	const dockBottomClass = $derived(
+		statsBarVisible ? 'bottom-[6.25rem] md:bottom-[6.5rem]' : 'bottom-5'
+	);
 
 	let resultsModalOpen = $state(false);
 
@@ -61,6 +77,7 @@
 	</div>
 {/snippet}
 
+{#if statsBarVisible}
 <footer
 	class="fixed inset-x-0 bottom-0 z-10 overflow-hidden rounded-t-xl border-t border-slate-700/50 bg-gradient-to-br from-slate-800 via-slate-800 to-slate-900 text-white shadow-lg ring-1 ring-slate-700/50 ring-t-0 backdrop-blur-sm"
 >
@@ -85,6 +102,46 @@
 		{/if}
 	</div>
 </footer>
+{/if}
+
+{#if persistDock?.visible}
+	<div
+		class="pointer-events-none fixed right-4 z-30 flex flex-col items-end gap-2 {dockBottomClass}"
+		aria-live="polite"
+	>
+		<div
+			class="pointer-events-auto flex max-w-[min(100vw-2rem,20rem)] flex-col gap-2 rounded-xl border border-slate-200/80 bg-white/95 p-3 shadow-xl shadow-slate-900/10 ring-1 ring-slate-200/60 backdrop-blur-md sm:flex-row sm:items-center"
+		>
+			{#if persistDock.hasUnsavedChanges}
+				{#if persistDock.isPersisted}
+					<Button
+						variant="filled"
+						label="Enregistrer les modifications"
+						disabled={persistDock.persisting}
+						onClick={() => persistDock?.onSave()}
+					/>
+				{:else}
+					<Button
+						variant="filled"
+						tone="success"
+						label="Sauvegarder le projet"
+						disabled={persistDock.persisting}
+						onClick={() => persistDock?.onSave()}
+					/>
+				{/if}
+			{/if}
+			{#if persistDock.isPersisted}
+				<Button
+					variant="outline"
+					tone="danger"
+					label="Supprimer"
+					disabled={persistDock.persisting}
+					onClick={() => persistDock?.onDelete()}
+				/>
+			{/if}
+		</div>
+	</div>
+{/if}
 
 {#if resultsModalOpen && simulationResult}
 	<!-- Modal overlay -->

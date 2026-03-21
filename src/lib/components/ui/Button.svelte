@@ -1,7 +1,7 @@
 <script lang="ts">
   type IconName = 'trash';
   type Variant = 'filled' | 'outline' | 'transparent';
-  type Tone = 'default' | 'danger';
+  type Tone = 'default' | 'danger' | 'inverse' | 'success';
   type Size = 'sm' | 'md';
 
   import Icon from './Icon.svelte';
@@ -48,19 +48,29 @@
   const variantToneClasses: Record<Variant, Record<Tone, string>> = {
     filled: {
       default:
-        'border border-slate-600/80 bg-slate-700/50 text-slate-200 shadow-sm hover:bg-slate-600/70 hover:text-white',
+        'border border-slate-600/80 bg-slate-700 text-white shadow-sm hover:bg-slate-900 hover:text-white',
+      inverse:
+        'border border-slate-100/80 bg-white text-slate-900 shadow-sm hover:bg-slate-200 hover:text-slate-900',
       danger:
-        'border border-red-500/80 bg-red-600/50 text-red-200 shadow-sm hover:bg-red-600/70 hover:text-white'
+        'border border-red-500/80 bg-red-600/50 text-red-200 shadow-sm hover:bg-red-600/70 hover:text-white',
+      success:
+        'border border-emerald-600/90 bg-emerald-600 text-white shadow-sm hover:bg-emerald-700 hover:text-white'
     },
     outline: {
       default:
-        'border border-slate-600/80 bg-transparent text-slate-200 hover:bg-slate-600/30',
+        'border border-slate-600 bg-transparent text-slate-600 hover:bg-slate-200',
+      inverse:
+        'border border-slate-100/80 bg-transparent text-white shadow-sm hover:bg-slate-200 hover:text-slate-900',
       danger:
-        'border border-red-500/80 bg-transparent text-red-400 hover:bg-red-500/20'
+        'border border-red-500/80 bg-transparent text-red-400 hover:bg-red-500/20',
+      success:
+        'border border-emerald-600/80 bg-transparent text-emerald-700 hover:bg-emerald-500/15'
     },
     transparent: {
       default: 'bg-transparent text-slate-200 hover:bg-slate-600/20',
-      danger: 'bg-transparent text-red-300 hover:bg-red-500/20'
+      inverse: 'bg-transparent text-slate-900 hover:bg-slate-200 hover:text-slate-900',
+      danger: 'bg-transparent text-red-300 hover:bg-red-500/20',
+      success: 'bg-transparent text-emerald-400 hover:bg-emerald-500/20'
     }
   };
 
@@ -68,7 +78,7 @@
     variantToneClasses[variant as Variant][tone as Tone]
   );
   const iconToneClass = $derived(
-    tone === 'danger' ? 'text-red-400' : 'text-current'
+    tone === 'danger' ? 'text-red-400' : tone === 'success' ? 'text-emerald-200' : 'text-current'
   );
 </script>
 
