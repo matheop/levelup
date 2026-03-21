@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
+	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { Project } from '$lib/domain';
 	import { supabase } from '$lib/supabaseClient';
 	import Select from '$lib/components/form/Select.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import {
 		createProjectFromInputs,
 		deleteProject,
@@ -13,24 +15,26 @@
 		type ProjectListItem
 	} from '$lib/data/projectsApi';
 	import {
-		ProjectFinancingSection,
+		PropertySection,
+		CostSection,
+		FinancingSection,
 		RevenueSection,
-		AmortizationAndTaxesSection,
-		ChargesAndWorksSection,
+		AmortizationTaxesSection,
+		ChargesSection,
+		FutureWorksSection,
 		FinancingComparisonSection
 	} from '$lib/components/sections';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
+	import { SnackbarManager, pushSnackbar } from '$lib/components/ui/snackbar';
 
 	let project = $state(Project.createDefault());
 	let projects = $state<ProjectListItem[]>([]);
 	let selectedProjectId = $state<string>('');
-	/** Pour detecter le passage d’un projet sauvegarde vers « Nouveau projet » (value ''). */
 	let previousSelectedProjectId = $state<string | null>(null);
+	/** Id de la liste pour lequel `project` a été chargé via l’API (évite un refetch ; plus fiable que `project.id` avec la réactivité des classes). */
+	let loadedListSelectionId = $state<string | null>(null);
 	let loadingProjects = $state(false);
-	let persistMessage = $state<string | null>(null);
-	let persistError = $state<string | null>(null);
-	/** Snapshot JSON de `toUserInputs()` au dernier etat « propre » (charge / sauvegarde / nouveau brouillon). */
 	let baselineSnapshot = $state<string>('');
 	let persisting = $state(false);
 	const hasSavedProjects = $derived(projects.length > 0);
@@ -39,7 +43,7 @@
 		baselineSnapshot !== '' &&
 			JSON.stringify(project.toUserInputs()) !== baselineSnapshot
 	);
-	const persistDockVisible = $derived(isPersisted || hasUnsavedChanges);
+	const persistBarVisible = $derived(isPersisted || hasUnsavedChanges);
 
 	function commitBaseline() {
 		baselineSnapshot = JSON.stringify(project.toUserInputs());
@@ -61,22 +65,24 @@
 		}))
 	]);
 
+	function setTaxRegime(regime: TaxRegimeName) {
+		project.taxRegime = regime;
+	}
+
 	async function refreshProjects() {
 		loadingProjects = true;
-		persistError = null;
 		try {
 			projects = await listUserProjects();
 		} catch (e) {
-			persistError = e instanceof Error ? e.message : 'Impossible de charger les projets';
+			pushSnackbar({
+				variant: 'danger',
+				message: e instanceof Error ? e.message : 'Impossible de charger les projets'
+			});
 		} finally {
 			loadingProjects = false;
 		}
 	}
 
-	/**
-	 * Select « Nouveau projet » ('') : brouillon propre (sans ecraser au premier paint).
-	 * Sinon : charge le projet sauvegarde.
-	 */
 	$effect(() => {
 		const id = selectedProjectId;
 
@@ -84,52 +90,88 @@
 			if (previousSelectedProjectId !== null && previousSelectedProjectId !== '') {
 				project = Project.createDefault(projects.length);
 				commitBaseline();
-				persistError = null;
-				persistMessage = 'Nouveau projet.';
+				pushSnackbar({ variant: 'info', message: 'Nouveau projet.' });
 			}
 			previousSelectedProjectId = id;
+			loadedListSelectionId = null;
 			return;
 		}
 
 		previousSelectedProjectId = id;
 
-		if (project.id === id) return;
-
-		persistError = null;
+		// Ne pas comparer à project.id : accès peu fiable dans $effect avec instance de classe $state.
+		if (loadedListSelectionId === id) return;
 
 		(async () => {
 			try {
 				const loaded = await getProjectById(id);
 				if (selectedProjectId !== id) return;
 				project = Project.fromUserInputs(loaded);
+				loadedListSelectionId = id;
 				commitBaseline();
-				persistMessage = 'Projet chargé.';
+				pushSnackbar({ variant: 'success', message: 'Projet chargé.' });
 			} catch (e) {
 				if (selectedProjectId !== id) return;
-				persistError = e instanceof Error ? e.message : 'Erreur lors du chargement';
+				loadedListSelectionId = null;
+				pushSnackbar({
+					variant: 'danger',
+					message: e instanceof Error ? e.message : 'Erreur lors du chargement'
+				});
 			}
 		})();
 	});
 
 	async function saveCurrentProject() {
-		persistMessage = null;
-		persistError = null;
 		persisting = true;
 		try {
 			const payload = project.toUserInputs();
 			if (project.id != null) {
 				await updateProjectInputs(project.id, payload);
-				persistMessage = 'Projet mis à jour.';
+				pushSnackbar({ variant: 'success', message: 'Projet mis à jour.' });
 			} else {
 				const id = await createProjectFromInputs(payload);
 				project.id = id;
 				selectedProjectId = String(id);
-				persistMessage = 'Projet sauvegardé.';
+				pushSnackbar({ variant: 'success', message: 'Projet sauvegardé.' });
 			}
 			await refreshProjects();
 			commitBaseline();
 		} catch (e) {
-			persistError = e instanceof Error ? e.message : 'Erreur lors de la sauvegarde';
+			pushSnackbar({
+				variant: 'danger',
+				message: e instanceof Error ? e.message : 'Erreur lors de la sauvegarde'
+			});
+		} finally {
+			persisting = false;
+		}
+	}
+
+	/**
+	 * Annule les modifications locales : recharge la dernière version en base si le projet est
+	 * enregistré, sinon repart d’un brouillon vide (nouveau projet).
+	 */
+	async function reinitializeProject() {
+		persisting = true;
+		try {
+			if (isPersisted && project.id != null) {
+				const loaded = await getProjectById(project.id);
+				project = Project.fromUserInputs(loaded);
+				commitBaseline();
+				pushSnackbar({
+					variant: 'success',
+					message: 'Données rétablies depuis la dernière sauvegarde.'
+				});
+			} else {
+				project = Project.createDefault(projects.length);
+				project.projectName = Project.defaultProjectName(projects.length);
+				commitBaseline();
+				pushSnackbar({ variant: 'info', message: 'Brouillon réinitialisé.' });
+			}
+		} catch (e) {
+			pushSnackbar({
+				variant: 'danger',
+				message: e instanceof Error ? e.message : 'Impossible de réinitialiser les données'
+			});
 		} finally {
 			persisting = false;
 		}
@@ -138,8 +180,6 @@
 	async function removeSelectedProject() {
 		const deletedId = project.id;
 		if (!deletedId) return;
-		persistMessage = null;
-		persistError = null;
 		persisting = true;
 		try {
 			await deleteProject(deletedId);
@@ -148,9 +188,12 @@
 			previousSelectedProjectId = '';
 			project = Project.createDefault(projects.length);
 			commitBaseline();
-			persistMessage = 'Projet supprimé.';
+			pushSnackbar({ variant: 'warning', message: 'Projet supprimé.' });
 		} catch (e) {
-			persistError = e instanceof Error ? e.message : 'Erreur lors de la suppression';
+			pushSnackbar({
+				variant: 'danger',
+				message: e instanceof Error ? e.message : 'Erreur lors de la suppression'
+			});
 		} finally {
 			persisting = false;
 		}
@@ -163,7 +206,6 @@
 
 	onMount(async () => {
 		await refreshProjects();
-		// Brouillon initial : nom = nb de projets sauvegardés + 1 une fois la liste connue
 		if (project.id == null) {
 			project.projectName = Project.defaultProjectName(projects.length);
 		}
@@ -171,54 +213,134 @@
 	});
 </script>
 
-<Header
-	projectName={project.projectName}
-	projectType={project.projectType}
-	taxRegime={project.taxRegime}
-	onSignOut={signOut}
-/>
-
-<main class="max-w-[1920px] mx-auto mb-20 p-4 md:p-6 pb-28 space-y-4 flex flex-col min-h-screen">
-	<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-		<div class="flex flex-wrap gap-2 items-end">
-			<div class="min-w-[260px] flex-1">
-				<Select label="Projet" id="saved-projects" bind:value={selectedProjectId} options={projectOptions} />
+<div class="sticky top-0 z-40 border-b border-fa-outline-variant/15 bg-fa-surface">
+	<Header
+		projectName={project.projectName}
+		projectType={project.projectType}
+		taxRegime={project.taxRegime}
+		onSignOut={signOut}
+		onTaxRegimeChange={setTaxRegime}
+	/>
+	<div
+		class="flex flex-col gap-3 border-t border-fa-outline-variant/10 bg-fa-surface-low px-5 py-3 md:flex-row md:items-center md:justify-between md:px-8"
+	>
+		<div class="flex flex-wrap items-center gap-3">
+			<span class="text-[10px] font-medium tracking-widest text-fa-outline uppercase">Projet :</span>
+			<div class="min-w-[200px] max-w-md flex-1">
+				<Select id="saved-projects" bind:value={selectedProjectId} options={projectOptions} />
 			</div>
+			<Button
+				variant="transparent"
+				tone="default"
+				size="icon"
+				ariaLabel="Nouveau projet"
+				className="rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
+				onClick={() => (selectedProjectId = '')}
+			>
+				{#snippet children()}
+					<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<circle cx="12" cy="12" r="10" />
+						<path d="M12 8v8M8 12h8" />
+					</svg>
+				{/snippet}
+			</Button>
 		</div>
-		{#if !loadingProjects && !persistError && !hasSavedProjects}
-			<p class="text-sm text-slate-600">
-				Aucun projet sauvegardé pour le moment. Saisis un projet puis utilise le panneau en bas a droite
-				pour l&apos;enregistrer.
-			</p>
-		{/if}
-		{#if persistMessage}
-			<p class="text-sm text-emerald-600">{persistMessage}</p>
-		{/if}
-		{#if persistError}
-			<p class="text-sm text-red-600">{persistError}</p>
+		{#if persistBarVisible}
+			<div
+				class="flex flex-wrap items-center gap-2 rounded-xl bg-fa-surface-lowest p-1 shadow-sm ring-1 ring-fa-outline-variant/20"
+			>
+				{#if hasUnsavedChanges}
+					<Button
+						variant="transparent"
+						tone="default"
+						size="md"
+						disabled={persisting}
+						title={isPersisted
+							? 'Recharge la dernière version enregistrée en base (annule les changements non sauvegardés)'
+							: 'Efface le brouillon et repart d’un projet vide'}
+						className="!rounded-lg !px-3 !py-2 !font-bold"
+						onClick={reinitializeProject}
+					>
+						{#snippet children()}
+							<span class="hidden sm:inline">Réinitialiser</span>
+							<span class="sm:hidden">Réinit.</span>
+						{/snippet}
+					</Button>
+					<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
+					{#if isPersisted}
+						<Button
+							variant="outline"
+							tone="success"
+							label="Sauvegarder"
+							disabled={persisting}
+							className="!rounded-lg !border-transparent hover:!bg-fa-secondary/10"
+							onClick={saveCurrentProject}
+						/>
+					{:else}
+						<Button
+							variant="filled"
+							tone="success"
+							label="Sauvegarder le projet"
+							disabled={persisting}
+							className="!rounded-lg"
+							onClick={saveCurrentProject}
+						/>
+					{/if}
+				{/if}
+				{#if isPersisted}
+					<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
+					<Button
+						variant="transparent"
+						tone="danger"
+						size="md"
+						disabled={persisting}
+						className="!flex !items-center !gap-2 !rounded-lg !px-3 !py-2 !font-bold"
+						onClick={removeSelectedProject}
+					>
+						{#snippet children()}
+							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+								<path d="M3 6h18" />
+								<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+								<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+							</svg>
+							<span class="hidden sm:inline">Supprimer</span>
+						{/snippet}
+					</Button>
+				{/if}
+			</div>
 		{/if}
 	</div>
-	<div class="flex-1 overflow-x-auto overflow-y-hidden pb-2" style="min-height: 0;">
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-6 min-w-0" style="min-width: min(100%, 1200px);">
-			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
-				<ProjectFinancingSection project={project} />
-			</div>
+</div>
 
-			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
-				<RevenueSection revenue={project.revenue} />
-				<AmortizationAndTaxesSection project={project} simulationResult={simulationResult} />
-			</div>
+<SnackbarManager />
 
-			<div class="space-y-6 min-w-[320px] overflow-y-auto overflow-x-hidden">
-				<ChargesAndWorksSection project={project} />
-			</div>
+<main class="mx-auto flex min-h-screen max-w-[1600px] flex-col px-5 pb-40 pt-8 md:px-8">
+	{#if !loadingProjects && !hasSavedProjects}
+		<p class="mb-4 text-sm text-fa-on-surface-variant">
+			Aucun projet sauvegardé pour le moment. Saisis un projet puis enregistre-le depuis la barre ci-dessus.
+		</p>
+	{/if}
+
+	<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+		<div id="fa-col-project" class="min-w-0 space-y-4 scroll-mt-28">
+			<PropertySection {project} />
+			<CostSection {project} />
+			<FinancingSection {project} />
+		</div>
+
+		<div id="fa-col-revenue" class="min-w-0 space-y-4 scroll-mt-28">
+			<RevenueSection revenue={project.revenue} />
+			<AmortizationTaxesSection project={project} simulationResult={simulationResult} />
+		</div>
+
+		<div id="fa-col-charges" class="min-w-0 space-y-4 scroll-mt-28">
+			<ChargesSection {project} />
+			<FutureWorksSection {project} />
 		</div>
 	</div>
-	<div class="mt-6 w-full max-w-5xl mx-auto">
-		<FinancingComparisonSection
-			{project}
-			simulationResultsByFinancing={simulationResultsByFinancing}
-		/>
+
+	<div class="mt-10 w-full">
+		<FinancingComparisonSection {project} simulationResultsByFinancing={simulationResultsByFinancing} />
 	</div>
 </main>
 
@@ -230,12 +352,4 @@
 	simulationResult={simulationResult}
 	loanAmount={project.primaryFinancing.loanAmount}
 	loanDuration={project.primaryFinancing.loanDuration}
-	persistDock={{
-		visible: persistDockVisible,
-		isPersisted,
-		hasUnsavedChanges,
-		onSave: saveCurrentProject,
-		onDelete: removeSelectedProject,
-		persisting
-	}}
 />

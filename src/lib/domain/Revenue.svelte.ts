@@ -54,9 +54,12 @@ export class Revenue {
 		return this.otherIncomes.reduce((s, r) => s + (r.amount || 0), 0);
 	}
 
+	/** Loyers annuels après vacance (hors autres revenus). */
+	get annualRentAfterVacancy(): number {
+		return this.totalMonthlyRent * 12 * (1 - this.vacancyRate);
+	}
+
 	get annualRevenueAfterVacancy(): number {
-		return (
-			this.totalMonthlyRent * 12 * (1 - this.vacancyRate) + this.totalOtherIncome
-		);
+		return this.annualRentAfterVacancy + this.totalOtherIncome;
 	}
 }

@@ -1,13 +1,11 @@
-export { default as ProjetSection } from './ProjetSection.svelte';
+export { default as PropertySection } from './PropertySection.svelte';
 export { default as CostSection } from './CostSection.svelte';
 export { default as FinancingSection } from './FinancingSection.svelte';
-export { default as ProjectFinancingSection } from './ProjectFinancingSection.svelte';
 export { default as RevenueSection } from './RevenueSection.svelte';
 export { default as ChargesSection } from './ChargesSection.svelte';
 export { default as FutureWorksSection } from './FutureWorksSection.svelte';
-export { default as ChargesAndWorksSection } from './ChargesAndWorksSection.svelte';
 export { default as TaxesSection } from './TaxesSection.svelte';
 export { default as AmortizationSection } from './AmortizationSection.svelte';
-export { default as AmortizationAndTaxesSection } from './AmortizationAndTaxesSection.svelte';
+export { default as AmortizationTaxesSection } from './AmortizationTaxesSection.svelte';
 export { default as FinancingComparisonSection } from './FinancingComparisonSection.svelte';
 export { default as ResultsSection } from './ResultsSection.svelte';

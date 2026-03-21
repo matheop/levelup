@@ -30,13 +30,13 @@
 
 <div class="flex flex-col">
   {#if label}
-  <label class="block text-xs text-slate-600 mb-1" for={id}>{label}</label>
+  <label class="block text-xs font-medium text-fa-on-surface-variant mb-1 uppercase tracking-wider" for={id}>{label}</label>
 {/if}
 <input
   {id}
   type={type}
   placeholder={placeholder}
-  class={`w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-800 bg-white ${className}`}
+  class={`w-full rounded-lg border border-fa-outline-variant/50 bg-fa-surface-lowest px-3 py-2 text-fa-on-surface focus:border-fa-primary-fixed focus:outline-none focus:ring-1 focus:ring-fa-primary-fixed ${className}`}
   bind:value
   {min}
   {max}
@@ -45,6 +45,6 @@
   {readonly}
 />
 {#if help}
-    <p class="mt-1 text-xs text-slate-500">{help}</p>
+    <p class="mt-1 text-xs text-fa-outline">{help}</p>
   {/if}
 </div>

@@ -1,16 +1,43 @@
 @import 'tailwindcss';
 
-/* Fond de page : dégradé doux + léger éclat en haut + grille discrète */
+/* Financial Architect – palette (maquette) */
+@theme {
+	--color-fa-surface: #f8f9ff;
+	--color-fa-surface-low: #eff4ff;
+	--color-fa-surface-lowest: #ffffff;
+	--color-fa-surface-high: #dce9ff;
+	--color-fa-surface-highest: #d3e4fe;
+	--color-fa-primary: #00030a;
+	--color-fa-primary-container: #0a1d37;
+	--color-fa-primary-fixed: #d6e3ff;
+	--color-fa-secondary: #006c49;
+	--color-fa-secondary-container: #6cf8bb;
+	--color-fa-on-secondary-container: #00714d;
+	--color-fa-on-surface: #0b1c30;
+	--color-fa-on-surface-variant: #44474d;
+	--color-fa-outline: #75777e;
+	--color-fa-outline-variant: #c5c6ce;
+	--color-fa-error: #ba1a1a;
+	--color-fa-error-container: #ffdad6;
+	--font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Fond page = surface maquette */
 .layout-bg {
-	background-color: rgb(241 245 249); /* slate-100 */
+	background-color: var(--color-fa-surface);
 	background-image:
 		radial-gradient(
 			ellipse 80% 50% at 50% -10%,
-			rgba(148 163 184 / 0.28),
+			rgb(214 227 255 / 0.45),
 			transparent 55%
 		),
-		linear-gradient(to right, rgba(148 163 184 / 0.07) 1px, transparent 1px),
-		linear-gradient(to bottom, rgba(148 163 184 / 0.07) 1px, transparent 1px);
+		linear-gradient(to right, rgb(197 198 206 / 0.12) 1px, transparent 1px),
+		linear-gradient(to bottom, rgb(197 198 206 / 0.12) 1px, transparent 1px);
 	background-size: 100% 100%, 48px 48px, 48px 48px;
 	background-position: 0 0, 0 0, 0 0;
+}
+
+body {
+	font-family: var(--font-sans);
+	color: var(--color-fa-on-surface);
 }

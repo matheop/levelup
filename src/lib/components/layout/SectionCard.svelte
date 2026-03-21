@@ -1,9 +1,19 @@
 <script lang="ts">
-	import type { Snippet } from "svelte";
+	import type { Snippet } from 'svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 
 	type Variant = 'default' | 'muted' | 'success' | 'danger';
 
-	const { title, variant = 'default', infoContent, children, footer, className = '' } = $props<{
+	const {
+		title,
+		variant = 'default',
+		infoContent,
+		children,
+		footer,
+		className = '',
+		onEdit,
+		editLabel = 'Modifier'
+	} = $props<{
 		title: string;
 		variant?: Variant;
 		/** Optional info text for the card title; when set, shows a (i) icon that toggles an info panel */
@@ -13,61 +23,90 @@
 		children: Snippet;
 		footer?: Snippet;
 		className?: string;
+		/** When set, shows an edit button that opens the section modal */
+		onEdit?: () => void;
+		editLabel?: string;
 	}>();
 
 	let infoOpen = $state(false);
 
-	// Success/danger: fond proche du neutre, la couleur ne vient que de l’accent et de la bordure de pied
 	const variantClasses: Record<Variant, string> = {
-		default: 'bg-slate-50/90 border-slate-200/90 ring-slate-200/50',
-		muted: 'bg-white border-slate-200/90 ring-slate-200/40',
-		success: 'bg-white border-slate-200/90 ring-slate-200/50 border-t-green-300/70',
-		danger: 'bg-white border-slate-200/90 ring-slate-200/50 border-t-red-300/70'
+		default:
+			'bg-fa-surface-low border-fa-outline-variant/25 ring-fa-outline-variant/15 shadow-sm',
+		muted:
+			'bg-fa-surface-lowest border-fa-outline-variant/25 ring-fa-outline-variant/10 shadow-sm',
+		success:
+			'bg-fa-surface-lowest border-fa-outline-variant/25 ring-fa-outline-variant/15 border-t-4 border-t-fa-secondary shadow-sm',
+		danger:
+			'bg-fa-surface-lowest border-fa-outline-variant/25 ring-fa-outline-variant/15 border-t-4 border-t-fa-error shadow-sm'
 	};
 
-	// Bandeau haut: fin et discret pour success/danger
 	const accentTopClasses: Record<Variant, string> = {
-		default: 'from-indigo-300/40 to-transparent',
-		muted: 'from-slate-200/50 to-transparent',
-		success: 'from-green-400/25 to-transparent h-6',
-		danger: 'from-red-400/25 to-transparent h-6'
+		default: 'from-fa-primary-fixed/50 to-transparent',
+		muted: 'from-fa-surface-high/60 to-transparent',
+		success: 'from-fa-secondary/20 to-transparent h-6',
+		danger: 'from-fa-error/15 to-transparent h-6'
+	};
+
+	const titleColorClasses: Record<Variant, string> = {
+		default: 'text-fa-primary-container',
+		muted: 'text-fa-primary-container',
+		success: 'text-fa-secondary',
+		danger: 'text-fa-error'
 	};
 
 	const footerBorderClasses: Record<Variant, string> = {
-		default: 'border-indigo-200/80',
-		muted: 'border-slate-200/80',
-		success: 'border-green-400/60',
-		danger: 'border-red-400/60'
+		default: 'border-fa-outline-variant/20',
+		muted: 'border-fa-outline-variant/20',
+		success: 'border-fa-secondary/30',
+		danger: 'border-fa-error/25'
 	};
 </script>
 
 <section
-	class="SectionCard-{title.replaceAll(' ', '-')} relative flex-shrink-0 overflow-hidden rounded-xl border p-5 shadow-md ring-1 backdrop-blur-[0.5px] {variantClasses[variant as Variant]} {className}"
+	class="SectionCard-{title.replaceAll(' ', '-')} relative flex-shrink-0 overflow-hidden rounded-xl border p-6 ring-1 backdrop-blur-sm {variantClasses[variant as Variant]} {className}"
 >
-	<!-- Subtle top accent -->
 	<div
-		class="pointer-events-none absolute inset-x-0 top-0 h-16 bg-gradient-to-b {accentTopClasses[variant as Variant]}"
+		class="pointer-events-none absolute inset-x-0 top-0 h-14 bg-gradient-to-b {accentTopClasses[variant as Variant]}"
 		aria-hidden="true"
 	></div>
 
-	<div class="relative flex items-center gap-2 mb-4">
-		<h2 class="text-lg font-semibold tracking-tight text-slate-800">{title}</h2>
-		{#if infoContent}
-			<button
-				type="button"
-				class="inline-flex items-center justify-center w-5 h-5 rounded-full border border-slate-300/80 bg-white/80 text-slate-500 shadow-sm hover:bg-slate-100 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 focus-visible:ring-offset-2 transition shrink-0"
-				aria-label="Informations"
-				aria-expanded={infoOpen}
-				onclick={() => (infoOpen = !infoOpen)}
-			>
-				<span class="text-xs font-semibold leading-none">i</span>
-			</button>
-		{/if}
+	<div class="relative mb-4 flex flex-wrap items-center gap-2">
+		<h2 class="min-w-0 flex-1 text-base font-bold tracking-tight {titleColorClasses[variant as Variant]}">
+			{title}
+		</h2>
+		<div class="flex shrink-0 items-center gap-1">
+			{#if onEdit}
+				<Button
+					variant="outline"
+					tone="default"
+					size="sm"
+					label={editLabel}
+					className="!shrink-0 !px-2 !py-1 !text-xs"
+					onClick={() => onEdit()}
+				/>
+			{/if}
+			{#if infoContent}
+				<Button
+					variant="outline"
+					tone="default"
+					size="icon"
+					ariaLabel="Informations"
+					ariaExpanded={infoOpen}
+					className="!inline-flex !size-5 !min-h-0 !min-w-0 shrink-0 !rounded-full !border-fa-outline-variant/60 !bg-fa-surface-lowest/90 !p-0 text-fa-outline shadow-sm hover:!bg-fa-surface-high hover:!text-fa-primary-container"
+					onClick={() => (infoOpen = !infoOpen)}
+				>
+					{#snippet children()}
+						<span class="text-xs font-semibold leading-none">i</span>
+					{/snippet}
+				</Button>
+			{/if}
+		</div>
 	</div>
 
 	{#if infoContent && infoOpen}
 		<div
-			class="relative mb-4 rounded-lg border border-slate-200/80 bg-white/60 p-3 text-sm text-slate-700 shadow-inner whitespace-pre-line backdrop-blur-[0.5px]"
+			class="relative mb-4 rounded-lg border border-fa-outline-variant/30 bg-fa-surface-lowest/80 p-3 text-sm text-fa-on-surface-variant shadow-inner whitespace-pre-line backdrop-blur-sm"
 		>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 			{@html infoContent}
@@ -79,11 +118,8 @@
 	</div>
 
 	{#if footer}
-		<div
-			class="relative mt-4 pt-3 border-t {footerBorderClasses[variant as Variant]}"
-		>
+		<div class="relative mt-4 border-t pt-3 {footerBorderClasses[variant as Variant]}">
 			{@render footer()}
 		</div>
 	{/if}
 </section>
-
