@@ -4,7 +4,7 @@
 	type IconName = 'trash';
 	type Variant = 'filled' | 'outline' | 'transparent' | 'link';
 	type Tone = 'default' | 'danger' | 'inverse' | 'success' | 'onDark';
-	type Size = 'sm' | 'md' | 'lg' | 'icon';
+	type Size = 'sm' | 'md' | 'lg' | 'xl' | 'icon';
 
 	import Icon from './Icon.svelte';
 
@@ -49,6 +49,7 @@
 		sm: 'min-h-8 px-2 py-1 text-xs rounded-lg',
 		md: 'min-h-9 px-3 py-1.5 text-sm rounded-xl',
 		lg: 'min-h-11 px-6 py-3 text-sm font-bold rounded-xl shadow-sm',
+		xl: 'min-h-14 px-6 py-4 text-base font-bold rounded-xl !shadow-[0_8px_20px_-4px_rgba(10,29,55,0.2)]',
 		icon: 'size-10 min-h-10 min-w-10 shrink-0 gap-0 rounded-xl p-0'
 	};
 
@@ -56,6 +57,7 @@
 		sm: 'min-h-0 px-0 py-0 text-xs rounded-none',
 		md: 'min-h-0 px-0 py-0 text-sm rounded-none',
 		lg: 'min-h-0 px-0 py-0 text-base font-bold rounded-none',
+		xl: 'min-h-0 px-0 py-0 text-lg font-bold rounded-none',
 		icon: 'min-h-0 p-0 rounded-none'
 	};
 
@@ -69,6 +71,7 @@
 		sm: 14,
 		md: 16,
 		lg: 18,
+		xl: 20,
 		icon: 20
 	};
 
@@ -127,7 +130,7 @@
 
 <button
 	type={type}
-	class="Button-{variant}-{tone} {base} {resolvedSizeClass} {variantClasses} {className}"
+	class="Button-{variant}-{tone} {base} {resolvedSizeClass} {variantClasses} {className} pointer-pointer"
 	{disabled}
 	title={titleAttr}
 	aria-label={ariaLabel}

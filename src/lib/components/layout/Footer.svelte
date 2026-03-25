@@ -93,61 +93,11 @@
 			</div>
 
 			<div class="flex flex-wrap items-center justify-between gap-4 md:justify-end">
-				<div class="flex gap-2 md:gap-4">
-					<Button
-						variant="transparent"
-						tone="onDark"
-						size="md"
-						className="!flex !h-auto !min-h-0 !w-auto !min-w-0 flex-col gap-0 !rounded-lg !p-2 !font-semibold md:!p-3"
-						onClick={() => scrollToId('fa-col-project')}
-					>
-						{#snippet children()}
-							<svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-							<span class="mt-1 text-xs font-semibold">Coût</span>
-						{/snippet}
-					</Button>
-					<Button
-						variant="transparent"
-						tone="onDark"
-						size="md"
-						className="!flex !h-auto !min-h-0 !w-auto !min-w-0 flex-col gap-0 !rounded-lg !p-2 !font-semibold md:!p-3"
-						onClick={() => scrollToId('fa-col-revenue')}
-					>
-						{#snippet children()}
-							<svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m23 6-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/></svg>
-							<span class="mt-1 text-xs font-semibold">Revenus</span>
-						{/snippet}
-					</Button>
-					<Button
-						variant="transparent"
-						tone="onDark"
-						size="md"
-						className="!flex !h-auto !min-h-0 !w-auto !min-w-0 flex-col gap-0 !rounded-lg !p-2 !font-semibold md:!p-3"
-						onClick={() => scrollToId('fa-col-charges')}
-					>
-						{#snippet children()}
-							<svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m23 18-9.5-9.5-5 5L1 6"/><path d="M17 18h6v-6"/></svg>
-							<span class="mt-1 text-xs font-semibold">Dépenses</span>
-						{/snippet}
-					</Button>
-					<Button
-						variant="filled"
-						tone="success"
-						size="md"
-						className="!flex !h-auto !min-h-0 !w-auto !min-w-0 flex-col gap-0 !rounded-xl !p-2 ring-2 ring-white/20 shadow-lg md:!p-3"
-						onClick={() => scrollToId('fa-footer-cashflow')}
-					>
-						{#snippet children()}
-							<svg class="size-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
-							<span class="mt-1 text-xs font-semibold">Cashflow</span>
-						{/snippet}
-					</Button>
-				</div>
 				{#if simulationResult}
 					<Button
 						variant="filled"
 						tone="inverse"
-						size="lg"
+						size="xl"
 						label="Détail des résultats"
 						className="active:translate-y-[-2px] hover:!bg-fa-surface-high"
 						onClick={() => (resultsModalOpen = true)}
@@ -182,12 +132,10 @@
 					className="!h-9 !w-9 !min-h-0 rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
 					onClick={closeResultsModal}
 				>
-					{#snippet children()}
-						<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-							<path d="M18 6 6 18" />
-							<path d="m6 6 12 12" />
-						</svg>
-					{/snippet}
+					<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<path d="M18 6 6 18" />
+						<path d="m6 6 12 12" />
+					</svg>
 				</Button>
 			</div>
 			<div class="min-h-0 flex-1 overflow-y-auto p-4">

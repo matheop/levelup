@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
-	type Variant = 'default' | 'muted' | 'success' | 'danger';
+	type Variant = 'default' | 'success' | 'danger';
 
 	const {
 		title,
@@ -32,8 +32,6 @@
 
 	const variantClasses: Record<Variant, string> = {
 		default:
-			'bg-fa-surface-low border-fa-outline-variant/25 ring-fa-outline-variant/15 shadow-sm',
-		muted:
 			'bg-fa-surface-lowest border-fa-outline-variant/25 ring-fa-outline-variant/10 shadow-sm',
 		success:
 			'bg-fa-surface-lowest border-fa-outline-variant/25 ring-fa-outline-variant/15 border-t-4 border-t-fa-secondary shadow-sm',
@@ -42,22 +40,19 @@
 	};
 
 	const accentTopClasses: Record<Variant, string> = {
-		default: 'from-fa-primary-fixed/50 to-transparent',
-		muted: 'from-fa-surface-high/60 to-transparent',
+		default: 'from-fa-surface-high/60 to-transparent',
 		success: 'from-fa-secondary/20 to-transparent h-6',
 		danger: 'from-fa-error/15 to-transparent h-6'
 	};
 
 	const titleColorClasses: Record<Variant, string> = {
 		default: 'text-fa-primary-container',
-		muted: 'text-fa-primary-container',
 		success: 'text-fa-secondary',
 		danger: 'text-fa-error'
 	};
 
 	const footerBorderClasses: Record<Variant, string> = {
 		default: 'border-fa-outline-variant/20',
-		muted: 'border-fa-outline-variant/20',
 		success: 'border-fa-secondary/30',
 		danger: 'border-fa-error/25'
 	};
@@ -96,9 +91,7 @@
 					className="!inline-flex !size-5 !min-h-0 !min-w-0 shrink-0 !rounded-full !border-fa-outline-variant/60 !bg-fa-surface-lowest/90 !p-0 text-fa-outline shadow-sm hover:!bg-fa-surface-high hover:!text-fa-primary-container"
 					onClick={() => (infoOpen = !infoOpen)}
 				>
-					{#snippet children()}
-						<span class="text-xs font-semibold leading-none">i</span>
-					{/snippet}
+					<span class="text-xs font-semibold leading-none">i</span>
 				</Button>
 			{/if}
 		</div>

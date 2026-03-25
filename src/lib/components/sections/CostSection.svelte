@@ -17,7 +17,7 @@
 	const totalProjectCost = $derived(project.cost.totalProjectCost(project.projectType));
 </script>
 
-<SectionCard title="Coûts" variant="muted" infoContent={COUTS_INFO} onEdit={() => (modalOpen = true)}>
+<SectionCard title="Coûts" infoContent={COUTS_INFO} onEdit={() => (modalOpen = true)}>
 	<dl class="space-y-2 text-sm">
 		{#if project.projectType === 'purchase'}
 			<div class="flex justify-between gap-4">

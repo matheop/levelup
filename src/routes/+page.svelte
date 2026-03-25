@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { goto } from '$app/navigation';
+import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { Project } from '$lib/domain';
@@ -201,7 +202,7 @@
 
 	async function signOut() {
 		await supabase.auth.signOut();
-		await goto('/auth');
+		await goto(resolve('/auth'));
 	}
 
 	onMount(async () => {
@@ -237,12 +238,10 @@
 				className="rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
 				onClick={() => (selectedProjectId = '')}
 			>
-				{#snippet children()}
-					<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-						<circle cx="12" cy="12" r="10" />
-						<path d="M12 8v8M8 12h8" />
-					</svg>
-				{/snippet}
+				<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+					<circle cx="12" cy="12" r="10" />
+					<path d="M12 8v8M8 12h8" />
+				</svg>
 			</Button>
 		</div>
 		{#if persistBarVisible}
@@ -261,10 +260,8 @@
 						className="!rounded-lg !px-3 !py-2 !font-bold"
 						onClick={reinitializeProject}
 					>
-						{#snippet children()}
-							<span class="hidden sm:inline">Réinitialiser</span>
-							<span class="sm:hidden">Réinit.</span>
-						{/snippet}
+						<span class="hidden sm:inline">Réinitialiser</span>
+						<span class="sm:hidden">Réinit.</span>
 					</Button>
 					<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
 					{#if isPersisted}
@@ -297,14 +294,12 @@
 						className="!flex !items-center !gap-2 !rounded-lg !px-3 !py-2 !font-bold"
 						onClick={removeSelectedProject}
 					>
-						{#snippet children()}
-							<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-								<path d="M3 6h18" />
-								<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-								<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-							</svg>
-							<span class="hidden sm:inline">Supprimer</span>
-						{/snippet}
+						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+							<path d="M3 6h18" />
+							<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+							<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+						</svg>
+						<span class="hidden sm:inline">Supprimer</span>
 					</Button>
 				{/if}
 			</div>
