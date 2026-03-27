@@ -1,11 +1,6 @@
 <script lang="ts">
 	import SectionCard from '$lib/components/layout/SectionCard.svelte';
-	import SectionSubtitle from '$lib/components/layout/SectionSubtitle.svelte';
-	import AppModal from '$lib/components/ui/AppModal.svelte';
-	import AmortizationSection from './AmortizationSection.svelte';
-	import TaxesSection from './TaxesSection.svelte';
-	import { getAmortizationInfoContent } from './amortizationCalc';
-	import { getTaxesInfoContent } from './taxesSectionInfo';
+	import { modal } from '$lib/components/ui/modal/Modal.svelte';
 	import type { Project } from '$lib/domain';
 	import type { SimulationResult } from '$lib/calculations';
 	import { LMNP_SUB_REGIMES } from '$lib/constants';
@@ -14,17 +9,6 @@
 		project: Project;
 		simulationResult?: SimulationResult | null;
 	}>();
-
-	let modalOpen = $state(false);
-
-	const taxesInfoContent = $derived(
-		getTaxesInfoContent(
-			project.taxes,
-			project.lmnpSubRegime ?? LMNP_SUB_REGIMES.reel_simplifie,
-			project.taxRegime
-		)
-	);
-	const amortInfoContent = $derived(getAmortizationInfoContent(project.taxRegime));
 
 	const tmiPct = $derived((project.taxes.taxBracketRate * 100).toLocaleString('fr-FR', { maximumFractionDigits: 0 }));
 	const psPct = $derived(
@@ -36,7 +20,10 @@
 </script>
 
 {#if project.taxRegime !== 'NU'}
-	<SectionCard title="Amortissements & impôts" onEdit={() => (modalOpen = true)}>
+	<SectionCard
+		title="Amortissements & impôts"
+		onEdit={() => modal.push('amortizationTaxes', { project, simulationResult })}
+	>
 		{#if project.taxRegime === 'LMNP'}
 			<dl class="space-y-2 text-sm">
 				<div class="flex justify-between gap-4">
@@ -59,34 +46,4 @@
 			</p>
 		{/if}
 	</SectionCard>
-
-	<AppModal
-		open={modalOpen}
-		title="Amortissements & impôts — édition"
-		titleId="modal-amort-taxes-title"
-		onClose={() => (modalOpen = false)}
-	>
-		<SectionSubtitle title="Amortissements" infoContent={amortInfoContent} />
-		<AmortizationSection
-			projectType={project.projectType}
-			costs={project.cost}
-			taxRegime={project.taxRegime}
-			embedded
-		/>
-		{#if project.taxRegime === 'LMNP' || project.taxRegime === 'SCI_IS'}
-			<SectionSubtitle
-				title="Impôts et prélèvements"
-				infoContent={taxesInfoContent}
-				className="border-t border-fa-outline-variant/20 pt-4"
-			/>
-			<TaxesSection
-				taxes={project.taxes}
-				taxRegime={project.taxRegime}
-				lmnpSubRegime={project.lmnpSubRegime}
-				annualRevenueAfterVacancy={project.annualRevenueAfterVacancy}
-				{simulationResult}
-				embedded
-			/>
-		{/if}
-	</AppModal>
 {/if}

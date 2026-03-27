@@ -1,6 +1,6 @@
 <script lang="ts">
-import { goto } from '$app/navigation';
-import { resolve } from '$app/paths';
+	import { goto, replaceState } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { Project } from '$lib/domain';
@@ -29,9 +29,11 @@ import { resolve } from '$app/paths';
 	import Header from '$lib/components/layout/Header.svelte';
 	import { SnackbarManager, pushSnackbar } from '$lib/components/ui/snackbar';
 
+	const NEW_PROJECT_PARAM = 'new';
+
 	let project = $state(Project.createDefault());
 	let projects = $state<ProjectListItem[]>([]);
-	let selectedProjectId = $state<string>('');
+	let selectedProjectId = $state<string>(NEW_PROJECT_PARAM);
 	let previousSelectedProjectId = $state<string | null>(null);
 	/** Id de la liste pour lequel `project` a été chargé via l’API (évite un refetch ; plus fiable que `project.id` avec la réactivité des classes). */
 	let loadedListSelectionId = $state<string | null>(null);
@@ -41,8 +43,7 @@ import { resolve } from '$app/paths';
 	const hasSavedProjects = $derived(projects.length > 0);
 	const isPersisted = $derived(project.id != null);
 	const hasUnsavedChanges = $derived(
-		baselineSnapshot !== '' &&
-			JSON.stringify(project.toUserInputs()) !== baselineSnapshot
+		baselineSnapshot !== '' && JSON.stringify(project.toUserInputs()) !== baselineSnapshot
 	);
 	const persistBarVisible = $derived(isPersisted || hasUnsavedChanges);
 
@@ -50,16 +51,59 @@ import { resolve } from '$app/paths';
 		baselineSnapshot = JSON.stringify(project.toUserInputs());
 	}
 
+	function getProjectParamFromUrl(): string | null {
+		if (typeof window === 'undefined') return null;
+		return new URL(window.location.href).searchParams.get('project');
+	}
+
+	function replaceDashboardProjectParam(projectParam: string): void {
+		if (typeof window === 'undefined') return;
+		const currentUrl = new URL(window.location.href);
+		const current = currentUrl.searchParams.get('project');
+		if (current === projectParam) return;
+		const nextHref = `${resolve('/dashboard')}?project=${encodeURIComponent(projectParam)}`;
+		replaceState(nextHref, window.history.state);
+	}
+
+	async function syncSelectionFromUrlOrFallback() {
+		const param = getProjectParamFromUrl();
+		const hasProjectParam = param != null;
+
+		if (param === NEW_PROJECT_PARAM) {
+			selectedProjectId = NEW_PROJECT_PARAM;
+			return;
+		}
+
+		if (param && projects.some((p) => String(p.id) === param)) {
+			selectedProjectId = param;
+			return;
+		}
+
+		if (projects.length > 0) {
+			const mostRecentId = String(projects[0].id);
+			selectedProjectId = mostRecentId;
+			replaceDashboardProjectParam(mostRecentId);
+			if (hasProjectParam && param !== mostRecentId) {
+				pushSnackbar({
+					variant: 'warning',
+					message: 'Projet demandé introuvable. Ouverture du projet le plus récent.'
+				});
+			}
+			return;
+		}
+
+		selectedProjectId = NEW_PROJECT_PARAM;
+		replaceDashboardProjectParam(NEW_PROJECT_PARAM);
+	}
+
 	const simulationResultsByFinancing = $derived(
 		project.financings.map((f) => project.simulateForFinancing(f))
 	);
-	const simulationResult = $derived(
-		simulationResultsByFinancing[0] ?? project.simulate()
-	);
+	const simulationResult = $derived(simulationResultsByFinancing[0] ?? project.simulate());
 	const monthlyCashflow = $derived(project.getMonthlyNetCashflow(1));
 
 	const projectOptions = $derived([
-		{ value: '', label: 'Nouveau projet' },
+		{ value: NEW_PROJECT_PARAM, label: 'Nouveau projet' },
 		...projects.map((p) => ({
 			value: String(p.id),
 			label: p.name
@@ -87,9 +131,12 @@ import { resolve } from '$app/paths';
 	$effect(() => {
 		const id = selectedProjectId;
 
-		if (id === '') {
-			if (previousSelectedProjectId !== null && previousSelectedProjectId !== '') {
+		void replaceDashboardProjectParam(id);
+
+		if (id === NEW_PROJECT_PARAM) {
+			if (previousSelectedProjectId !== null && previousSelectedProjectId !== NEW_PROJECT_PARAM) {
 				project = Project.createDefault(projects.length);
+				project.projectName = Project.defaultProjectName(projects.length);
 				commitBaseline();
 				pushSnackbar({ variant: 'info', message: 'Nouveau projet.' });
 			}
@@ -118,6 +165,7 @@ import { resolve } from '$app/paths';
 					variant: 'danger',
 					message: e instanceof Error ? e.message : 'Erreur lors du chargement'
 				});
+				void syncSelectionFromUrlOrFallback();
 			}
 		})();
 	});
@@ -185,10 +233,12 @@ import { resolve } from '$app/paths';
 		try {
 			await deleteProject(deletedId);
 			await refreshProjects();
-			selectedProjectId = '';
-			previousSelectedProjectId = '';
-			project = Project.createDefault(projects.length);
-			commitBaseline();
+			if (projects.length > 0) {
+				selectedProjectId = String(projects[0].id);
+			} else {
+				selectedProjectId = NEW_PROJECT_PARAM;
+			}
+			loadedListSelectionId = null;
 			pushSnackbar({ variant: 'warning', message: 'Projet supprimé.' });
 		} catch (e) {
 			pushSnackbar({
@@ -207,10 +257,12 @@ import { resolve } from '$app/paths';
 
 	onMount(async () => {
 		await refreshProjects();
-		if (project.id == null) {
+		await syncSelectionFromUrlOrFallback();
+		if (selectedProjectId === NEW_PROJECT_PARAM) {
+			project = Project.createDefault(projects.length);
 			project.projectName = Project.defaultProjectName(projects.length);
+			commitBaseline();
 		}
-		commitBaseline();
 	});
 </script>
 
@@ -236,9 +288,18 @@ import { resolve } from '$app/paths';
 				size="icon"
 				ariaLabel="Nouveau projet"
 				className="rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
-				onClick={() => (selectedProjectId = '')}
+				onClick={() => (selectedProjectId = NEW_PROJECT_PARAM)}
 			>
-				<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					width="22"
+					height="22"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					aria-hidden="true"
+				>
 					<circle cx="12" cy="12" r="10" />
 					<path d="M12 8v8M8 12h8" />
 				</svg>
@@ -294,7 +355,16 @@ import { resolve } from '$app/paths';
 						className="!flex !items-center !gap-2 !rounded-lg !px-3 !py-2 !font-bold"
 						onClick={removeSelectedProject}
 					>
-						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							aria-hidden="true"
+						>
 							<path d="M3 6h18" />
 							<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
 							<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
@@ -325,7 +395,7 @@ import { resolve } from '$app/paths';
 
 		<div id="fa-col-revenue" class="min-w-0 space-y-4 scroll-mt-28">
 			<RevenueSection revenue={project.revenue} />
-			<AmortizationTaxesSection project={project} simulationResult={simulationResult} />
+			<AmortizationTaxesSection {project} {simulationResult} />
 		</div>
 
 		<div id="fa-col-charges" class="min-w-0 space-y-4 scroll-mt-28">
@@ -335,16 +405,16 @@ import { resolve } from '$app/paths';
 	</div>
 
 	<div class="mt-10 w-full">
-		<FinancingComparisonSection {project} simulationResultsByFinancing={simulationResultsByFinancing} />
+		<FinancingComparisonSection {project} {simulationResultsByFinancing} />
 	</div>
 </main>
 
 <Footer
-	monthlyCashflow={monthlyCashflow}
+	{monthlyCashflow}
 	revenues={project.annualRevenueAfterVacancy}
 	totalProjectCost={project.totalProjectCostWithInterest}
 	charges={project.annualChargesForCalculation}
-	simulationResult={simulationResult}
+	{simulationResult}
 	loanAmount={project.primaryFinancing.loanAmount}
 	loanDuration={project.primaryFinancing.loanDuration}
 />

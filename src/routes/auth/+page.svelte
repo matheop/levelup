@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
+	import Input from '$lib/components/form/Input.svelte';
 
 	let { data } = $props();
 
@@ -55,7 +56,7 @@
 				const { error } = await supabase.auth.signInWithPassword({ email, password });
 				if (error) throw error;
 				message = 'Connexion en cours...';
-				await goto(resolve('/'), { invalidateAll: true });
+				await goto(resolve('/dashboard'), { invalidateAll: true });
 			}
 		} catch (e) {
 			errorMessage = e instanceof Error ? e.message : 'Erreur inconnue';
@@ -122,21 +123,6 @@
 					Gérez vos investissements LMNP, SCI et Holding avec la rigueur d'un expert-comptable.
 				</p>
 			</div>
-		</div>
-		<div class="relative z-10 flex items-center gap-4">
-			<div
-				class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-fa-secondary text-white"
-				aria-hidden="true"
-			>
-				<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-					<path
-						d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"
-					/>
-				</svg>
-			</div>
-			<p class="font-sans text-xs text-fa-surface-highest/80">
-				Sécurisé par protocole bancaire AES-256.
-			</p>
 		</div>
 		<div class="pointer-events-none absolute inset-0 opacity-[0.08]" aria-hidden="true">
 			<svg class="h-full w-full" xmlns="http://www.w3.org/2000/svg">
@@ -217,20 +203,15 @@
 			</div>
 
 			<form class="space-y-6" onsubmit={submitEmailPassword}>
-				<div class="space-y-2">
-					<label class="ml-1 block text-sm font-bold text-fa-on-surface-variant" for="auth-email"
-						>Email</label
-					>
-					<input
-						id="auth-email"
-						type="email"
-						autocomplete="email"
-						placeholder="nom@exemple.fr"
-						bind:value={email}
-						disabled={loading}
-						class="w-full rounded-t-xl border-0 border-b-2 border-transparent bg-fa-surface-low px-4 py-4 font-sans text-fa-on-surface placeholder:text-fa-outline/50 transition focus:border-fa-primary-fixed focus:outline-none focus:ring-0"
-					/>
-				</div>
+				<Input
+					id="auth-email"
+					type="email"
+					autocomplete="email"
+					label="Email"
+					placeholder="nom@exemple.fr"
+					bind:value={email}
+					disabled={loading}
+				/>
 
 				<div class="space-y-2">
 					<div class="flex items-center justify-between px-1">
@@ -248,14 +229,13 @@
 							</button>
 						{/if}
 					</div>
-					<input
+					<Input
 						id="auth-password"
 						type="password"
 						autocomplete={mode === 'login' ? 'current-password' : 'new-password'}
 						placeholder="••••••••"
 						bind:value={password}
 						disabled={loading}
-						class="w-full rounded-t-xl border-0 border-b-2 border-transparent bg-fa-surface-low px-4 py-4 font-sans text-fa-on-surface placeholder:text-fa-outline/50 transition focus:border-fa-primary-fixed focus:outline-none focus:ring-0"
 					/>
 				</div>
 
