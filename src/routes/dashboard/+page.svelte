@@ -27,7 +27,7 @@
 	} from '$lib/components/sections';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
-	import { SnackbarManager, pushSnackbar } from '$lib/components/ui/snackbar';
+	import { SnackbarManager, snackbarQueue } from '$lib/components/ui/snackbar';
 
 	const NEW_PROJECT_PARAM = 'new';
 
@@ -84,9 +84,10 @@
 			selectedProjectId = mostRecentId;
 			replaceDashboardProjectParam(mostRecentId);
 			if (hasProjectParam && param !== mostRecentId) {
-				pushSnackbar({
+				snackbarQueue.add({
 					variant: 'warning',
-					message: 'Projet demandé introuvable. Ouverture du projet le plus récent.'
+					title: 'Projet demandé introuvable',
+					text: 'Ouverture du projet le plus récent.'
 				});
 			}
 			return;
@@ -119,9 +120,9 @@
 		try {
 			projects = await listUserProjects();
 		} catch (e) {
-			pushSnackbar({
+			snackbarQueue.add({
 				variant: 'danger',
-				message: e instanceof Error ? e.message : 'Impossible de charger les projets'
+				title: e instanceof Error ? e.message : 'Impossible de charger les projets'
 			});
 		} finally {
 			loadingProjects = false;
@@ -138,7 +139,7 @@
 				project = Project.createDefault(projects.length);
 				project.projectName = Project.defaultProjectName(projects.length);
 				commitBaseline();
-				pushSnackbar({ variant: 'info', message: 'Nouveau projet.' });
+				snackbarQueue.add({ variant: 'info', title: 'Nouveau projet.' });
 			}
 			previousSelectedProjectId = id;
 			loadedListSelectionId = null;
@@ -157,13 +158,13 @@
 				project = Project.fromUserInputs(loaded);
 				loadedListSelectionId = id;
 				commitBaseline();
-				pushSnackbar({ variant: 'success', message: 'Projet chargé.' });
+				snackbarQueue.add({ variant: 'success', title: 'Projet chargé.' });
 			} catch (e) {
 				if (selectedProjectId !== id) return;
 				loadedListSelectionId = null;
-				pushSnackbar({
+				snackbarQueue.add({
 					variant: 'danger',
-					message: e instanceof Error ? e.message : 'Erreur lors du chargement'
+					title: e instanceof Error ? e.message : 'Erreur lors du chargement'
 				});
 				void syncSelectionFromUrlOrFallback();
 			}
@@ -176,19 +177,19 @@
 			const payload = project.toUserInputs();
 			if (project.id != null) {
 				await updateProjectInputs(project.id, payload);
-				pushSnackbar({ variant: 'success', message: 'Projet mis à jour.' });
+				snackbarQueue.add({ variant: 'success', title: 'Projet mis à jour.' });
 			} else {
 				const id = await createProjectFromInputs(payload);
 				project.id = id;
 				selectedProjectId = String(id);
-				pushSnackbar({ variant: 'success', message: 'Projet sauvegardé.' });
+				snackbarQueue.add({ variant: 'success', title: 'Projet sauvegardé.' });
 			}
 			await refreshProjects();
 			commitBaseline();
 		} catch (e) {
-			pushSnackbar({
+			snackbarQueue.add({
 				variant: 'danger',
-				message: e instanceof Error ? e.message : 'Erreur lors de la sauvegarde'
+				title: e instanceof Error ? e.message : 'Erreur lors de la sauvegarde'
 			});
 		} finally {
 			persisting = false;
@@ -206,20 +207,20 @@
 				const loaded = await getProjectById(project.id);
 				project = Project.fromUserInputs(loaded);
 				commitBaseline();
-				pushSnackbar({
+				snackbarQueue.add({
 					variant: 'success',
-					message: 'Données rétablies depuis la dernière sauvegarde.'
+					title: 'Données rétablies depuis la dernière sauvegarde.'
 				});
 			} else {
 				project = Project.createDefault(projects.length);
 				project.projectName = Project.defaultProjectName(projects.length);
 				commitBaseline();
-				pushSnackbar({ variant: 'info', message: 'Brouillon réinitialisé.' });
+				snackbarQueue.add({ variant: 'info', title: 'Brouillon réinitialisé.' });
 			}
 		} catch (e) {
-			pushSnackbar({
+			snackbarQueue.add({
 				variant: 'danger',
-				message: e instanceof Error ? e.message : 'Impossible de réinitialiser les données'
+				title: e instanceof Error ? e.message : 'Impossible de réinitialiser les données'
 			});
 		} finally {
 			persisting = false;
@@ -239,11 +240,11 @@
 				selectedProjectId = NEW_PROJECT_PARAM;
 			}
 			loadedListSelectionId = null;
-			pushSnackbar({ variant: 'warning', message: 'Projet supprimé.' });
+			snackbarQueue.add({ variant: 'warning', title: 'Projet supprimé.' });
 		} catch (e) {
-			pushSnackbar({
+			snackbarQueue.add({
 				variant: 'danger',
-				message: e instanceof Error ? e.message : 'Erreur lors de la suppression'
+				title: e instanceof Error ? e.message : 'Erreur lors de la suppression'
 			});
 		} finally {
 			persisting = false;

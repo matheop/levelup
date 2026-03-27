@@ -1,39 +1,60 @@
-export type SnackVariant = 'info' | 'success' | 'warning' | 'danger';
+import type { ComponentProps } from 'svelte';
+import Snackbar, { type SnackbarProps } from './Snackbar.svelte';
 
-export type SnackItem = {
-	id: string;
-	variant: SnackVariant;
-	message: string;
-	/** `null` = fermeture uniquement manuelle (bouton X). Sinon durée en ms. */
-	durationMs: number | null;
-};
+export const DEFAULT_AUTO_DISMISS_MS = 5000;
+export type SnackbarQueueItem = SnackbarProps & { autoDismissMs: number | null };
 
-export type PushSnackOptions = {
-	message: string;
-	variant: SnackVariant;
-	/**
-	 * Durée avant fermeture automatique. Défaut : 5000 ms.
-	 * Passer `null` pour une snackbar uniquement fermable via le bouton X.
-	 */
-	durationMs?: number | null;
-};
+export class SnackbarQueue {
+	#openingElement = $state<HTMLElement>();
+	#snackbarQueue: Array<SnackbarQueueItem> = $state([]);
+	#autoDismissTimer: ReturnType<typeof setTimeout> | null = null;
 
-/**
- * File d’attente partagée (réactive). Ne pas réassigner : utiliser `pushSnackbar` / `dismissCurrentSnackbar`.
- */
-export const snackbarQueue = $state<SnackItem[]>([]);
+	get current() {
+		return this.#snackbarQueue[0];
+	}
 
-export function pushSnackbar(opts: PushSnackOptions): void {
-	const durationMs = opts.durationMs === undefined ? 5000 : opts.durationMs;
-	snackbarQueue.push({
-		id: crypto.randomUUID(),
-		variant: opts.variant,
-		message: opts.message,
-		durationMs
-	});
-}
+	#clearAutoDismissTimer() {
+		if (this.#autoDismissTimer != null) {
+			clearTimeout(this.#autoDismissTimer);
+			this.#autoDismissTimer = null;
+		}
+	}
 
-/** Retire la snackbar en tête de file (affichage séquentiel). */
-export function dismissCurrentSnackbar(): void {
-	snackbarQueue.shift();
+	#scheduleAutoDismissForCurrent() {
+		this.#clearAutoDismissTimer();
+		if (!this.current || this.current.autoDismissMs === null) return;
+		this.#autoDismissTimer = setTimeout(() => {
+			this.#autoDismissTimer = null;
+			this.close();
+		}, this.current.autoDismissMs);
+	}
+
+	add(snackbarProps: ComponentProps<typeof Snackbar> & { autoDismissMs?: number | null }) {
+		if (!this.#openingElement) {
+			this.#openingElement = document.activeElement as HTMLElement;
+		}
+		this.#snackbarQueue.push({
+			...snackbarProps,
+			autoDismissMs:
+				snackbarProps.autoDismissMs === undefined
+					? DEFAULT_AUTO_DISMISS_MS
+					: snackbarProps.autoDismissMs
+		});
+		if (this.#snackbarQueue.length === 1) {
+			this.#scheduleAutoDismissForCurrent();
+		}
+	}
+
+	close() {
+		this.#clearAutoDismissTimer();
+		this.current?.handleClose?.();
+		this.#snackbarQueue.splice(0, 1);
+
+		if (this.#snackbarQueue.length === 0) {
+			this.#openingElement?.focus();
+			this.#openingElement = undefined;
+		} else {
+			this.#scheduleAutoDismissForCurrent();
+		}
+	}
 }
