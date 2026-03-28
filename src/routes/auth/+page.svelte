@@ -2,6 +2,7 @@
 	import { supabase } from '$lib/supabaseClient';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/form/Input.svelte';
 
@@ -9,6 +10,12 @@
 
 	type Mode = 'login' | 'signup';
 	let mode = $state<Mode>('login');
+
+	$effect(() => {
+		const m = page.url.searchParams.get('mode');
+		if (m === 'signup') mode = 'signup';
+		else if (m === 'login') mode = 'login';
+	});
 	let email = $state('');
 	let password = $state('');
 	let rememberMe = $state(false);
@@ -41,9 +48,9 @@
 				const {
 					data: { session }
 				} = await supabase.auth.getSession();
-				if (session) {
-					message = 'Connexion en cours...';
-					await goto(resolve('/'), { invalidateAll: true });
+			if (session) {
+				message = 'Connexion en cours...';
+				await goto(resolve('/dashboard'), { invalidateAll: true });
 				} else {
 					message = 'Compte créé. Vérifie ta boîte mail si confirmation requise.';
 				}
@@ -109,13 +116,15 @@
 <div class="flex min-h-screen w-full flex-col bg-fa-surface md:flex-row">
 	<!-- Panneau gauche (desktop) -->
 	<section
-		class="relative hidden min-h-[40vh] flex-col justify-between overflow-hidden bg-gradient-to-br from-[#00030a] to-fa-primary-container p-10 md:flex md:w-5/12 md:min-h-screen lg:w-4/12 lg:p-12"
+		class="relative hidden min-h-[40vh] flex-col justify-between overflow-hidden bg-gradient-to-br from-[#00030a] to-fa-primary-container p-10 md:flex md:min-h-screen md:w-5/12 lg:w-4/12 lg:p-12"
 		aria-label="Présentation"
 	>
 		<div class="relative z-10">
 			<p class="font-sans text-xl font-extrabold tracking-tight text-white">Financial Architect</p>
 			<div class="mt-16 lg:mt-24">
-				<h1 class="font-sans text-4xl font-extrabold leading-tight tracking-tighter text-white lg:text-5xl">
+				<h1
+					class="font-sans text-4xl leading-tight font-extrabold tracking-tighter text-white lg:text-5xl"
+				>
 					L'immobilier,<br />
 					<span class="text-fa-secondary-container">conçu avec précision.</span>
 				</h1>
@@ -135,7 +144,7 @@
 			</svg>
 		</div>
 		<div
-			class="pointer-events-none absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-fa-secondary/20 blur-[120px]"
+			class="pointer-events-none absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-fa-secondary/20 blur-[120px]"
 			aria-hidden="true"
 		></div>
 	</section>
@@ -195,7 +204,7 @@
 			<div class="relative mb-8 flex items-center py-2">
 				<div class="h-px flex-1 bg-fa-outline-variant/30"></div>
 				<span
-					class="mx-4 shrink-0 font-sans text-[10px] font-semibold uppercase tracking-widest text-fa-outline"
+					class="mx-4 shrink-0 font-sans text-[10px] font-semibold tracking-widest text-fa-outline uppercase"
 				>
 					ou avec email
 				</span>
@@ -262,9 +271,24 @@
 					disabled={loading}
 					className="w-full gap-2 font-sans hover:bg-fa-primary active:scale-[0.97]"
 				>
-					<span>{loading ? 'Chargement...' : mode === 'signup' ? 'Créer mon compte' : 'Se connecter'}</span>
+					<span
+						>{loading
+							? 'Chargement...'
+							: mode === 'signup'
+								? 'Créer mon compte'
+								: 'Se connecter'}</span
+					>
 					{#if !loading}
-						<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							width="18"
+							height="18"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							aria-hidden="true"
+						>
 							<path d="M5 12h14M13 6l6 6-6 6" />
 						</svg>
 					{/if}
@@ -313,4 +337,7 @@
 	</main>
 </div>
 
-<div class="fixed bottom-8 left-1/2 h-1 w-24 -translate-x-1/2 rounded-full bg-fa-outline-variant/30 md:hidden" aria-hidden="true"></div>
+<div
+	class="fixed bottom-8 left-1/2 h-1 w-24 -translate-x-1/2 rounded-full bg-fa-outline-variant/30 md:hidden"
+	aria-hidden="true"
+></div>

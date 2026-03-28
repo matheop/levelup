@@ -14,7 +14,9 @@
 		amortizationTaxes: () =>
 			import('$lib/components/sections/modals/AmortizationTaxesModal.svelte'),
 		charges: () => import('$lib/components/sections/modals/ChargesModal.svelte'),
-		futureWorks: () => import('$lib/components/sections/modals/FutureWorksModal.svelte')
+		futureWorks: () => import('$lib/components/sections/modals/FutureWorksModal.svelte'),
+		registerProject: () =>
+			import('$lib/components/sections/modals/RegisterProjectModal.svelte')
 	} as const;
 
 	modal.init(modalRegistry as unknown as ModalRegistry);

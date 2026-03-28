@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { goto, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { Project } from '$lib/domain';
 	import { supabase } from '$lib/supabaseClient';
-	import Select from '$lib/components/form/Select.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import {
 		createProjectFromInputs,
 		deleteProject,
@@ -27,7 +25,15 @@
 	} from '$lib/components/sections';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
+	import Subheader from '$lib/components/layout/Subheader.svelte';
 	import { SnackbarManager, snackbarQueue } from '$lib/components/ui/snackbar';
+	import { modal } from '$lib/components/ui/modal/Modal.svelte';
+	import { clearOnboardingDraft, getOnboardingDraftPayload } from '$lib/onboarding';
+	import type { PageData } from './$types';
+
+	let { data } = $props<{ data: PageData }>();
+
+	const isAuthenticated = $derived(data.isAuthenticated);
 
 	const NEW_PROJECT_PARAM = 'new';
 
@@ -35,7 +41,6 @@
 	let projects = $state<ProjectListItem[]>([]);
 	let selectedProjectId = $state<string>(NEW_PROJECT_PARAM);
 	let previousSelectedProjectId = $state<string | null>(null);
-	/** Id de la liste pour lequel `project` a été chargé via l’API (évite un refetch ; plus fiable que `project.id` avec la réactivité des classes). */
 	let loadedListSelectionId = $state<string | null>(null);
 	let loadingProjects = $state(false);
 	let baselineSnapshot = $state<string>('');
@@ -62,6 +67,7 @@
 		const current = currentUrl.searchParams.get('project');
 		if (current === projectParam) return;
 		const nextHref = `${resolve('/dashboard')}?project=${encodeURIComponent(projectParam)}`;
+		/* eslint-disable-next-line svelte/no-navigation-without-resolve -- query string on resolved base */
 		replaceState(nextHref, window.history.state);
 	}
 
@@ -130,6 +136,8 @@
 	}
 
 	$effect(() => {
+		if (!isAuthenticated) return;
+
 		const id = selectedProjectId;
 
 		void replaceDashboardProjectParam(id);
@@ -148,7 +156,6 @@
 
 		previousSelectedProjectId = id;
 
-		// Ne pas comparer à project.id : accès peu fiable dans $effect avec instance de classe $state.
 		if (loadedListSelectionId === id) return;
 
 		(async () => {
@@ -196,10 +203,6 @@
 		}
 	}
 
-	/**
-	 * Annule les modifications locales : recharge la dernière version en base si le projet est
-	 * enregistré, sinon repart d’un brouillon vide (nouveau projet).
-	 */
 	async function reinitializeProject() {
 		persisting = true;
 		try {
@@ -256,13 +259,70 @@
 		await goto(resolve('/auth'));
 	}
 
+	async function autoImportDexieDraft(): Promise<string | null> {
+		const payload = await getOnboardingDraftPayload();
+		if (!payload) return null;
+		try {
+			const id = await createProjectFromInputs(payload);
+			await clearOnboardingDraft();
+			return String(id);
+		} catch (e) {
+			snackbarQueue.add({
+				variant: 'danger',
+				title: e instanceof Error ? e.message : 'Erreur lors de l\u2019import du brouillon'
+			});
+			return null;
+		}
+	}
+
+	let registerTimer: ReturnType<typeof setTimeout> | undefined;
+	onDestroy(() => clearTimeout(registerTimer));
+
 	onMount(async () => {
+		if (!isAuthenticated) {
+			const payload = await getOnboardingDraftPayload();
+			if (!payload) {
+				await goto(resolve('/onboarding'));
+				return;
+			}
+			project = Project.fromUserInputs(payload);
+			commitBaseline();
+
+			registerTimer = setTimeout(() => {
+				modal.push('registerProject');
+			}, 5000);
+			return;
+		}
+
+		const importedId = await autoImportDexieDraft();
+
 		await refreshProjects();
+
+		if (importedId) {
+			selectedProjectId = importedId;
+			replaceDashboardProjectParam(importedId);
+			snackbarQueue.add({
+				variant: 'success',
+				title: 'Brouillon importé et sauvegardé en base.'
+			});
+			return;
+		}
+
 		await syncSelectionFromUrlOrFallback();
+
+		const url = new URL(window.location.href);
+
 		if (selectedProjectId === NEW_PROJECT_PARAM) {
 			project = Project.createDefault(projects.length);
 			project.projectName = Project.defaultProjectName(projects.length);
 			commitBaseline();
+		}
+
+		if (url.searchParams.has('from')) {
+			url.searchParams.delete('from');
+			const q = url.searchParams.toString();
+			/* eslint-disable-next-line svelte/no-navigation-without-resolve -- query string on resolved base */
+			replaceState(`${resolve('/dashboard')}${q ? `?${q}` : ''}`, window.history.state);
 		}
 	});
 </script>
@@ -272,134 +332,48 @@
 		projectName={project.projectName}
 		projectType={project.projectType}
 		taxRegime={project.taxRegime}
+		{isAuthenticated}
 		onSignOut={signOut}
 		onTaxRegimeChange={setTaxRegime}
 	/>
-	<div
-		class="flex flex-col gap-3 border-t border-fa-outline-variant/10 bg-fa-surface-low px-5 py-3 md:flex-row md:items-center md:justify-between md:px-8"
-	>
-		<div class="flex flex-wrap items-center gap-3">
-			<span class="text-[10px] font-medium tracking-widest text-fa-outline uppercase">Projet :</span>
-			<div class="min-w-[200px] max-w-md flex-1">
-				<Select id="saved-projects" bind:value={selectedProjectId} options={projectOptions} />
-			</div>
-			<Button
-				variant="transparent"
-				tone="default"
-				size="icon"
-				ariaLabel="Nouveau projet"
-				className="rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
-				onClick={() => (selectedProjectId = NEW_PROJECT_PARAM)}
-			>
-				<svg
-					xmlns="http://www.w3.org/2000/svg"
-					width="22"
-					height="22"
-					viewBox="0 0 24 24"
-					fill="none"
-					stroke="currentColor"
-					stroke-width="2"
-					aria-hidden="true"
-				>
-					<circle cx="12" cy="12" r="10" />
-					<path d="M12 8v8M8 12h8" />
-				</svg>
-			</Button>
-		</div>
-		{#if persistBarVisible}
-			<div
-				class="flex flex-wrap items-center gap-2 rounded-xl bg-fa-surface-lowest p-1 shadow-sm ring-1 ring-fa-outline-variant/20"
-			>
-				{#if hasUnsavedChanges}
-					<Button
-						variant="transparent"
-						tone="default"
-						size="md"
-						disabled={persisting}
-						title={isPersisted
-							? 'Recharge la dernière version enregistrée en base (annule les changements non sauvegardés)'
-							: 'Efface le brouillon et repart d’un projet vide'}
-						className="!rounded-lg !px-3 !py-2 !font-bold"
-						onClick={reinitializeProject}
-					>
-						<span class="hidden sm:inline">Réinitialiser</span>
-						<span class="sm:hidden">Réinit.</span>
-					</Button>
-					<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
-					{#if isPersisted}
-						<Button
-							variant="outline"
-							tone="success"
-							label="Sauvegarder"
-							disabled={persisting}
-							className="!rounded-lg !border-transparent hover:!bg-fa-secondary/10"
-							onClick={saveCurrentProject}
-						/>
-					{:else}
-						<Button
-							variant="filled"
-							tone="success"
-							label="Sauvegarder le projet"
-							disabled={persisting}
-							className="!rounded-lg"
-							onClick={saveCurrentProject}
-						/>
-					{/if}
-				{/if}
-				{#if isPersisted}
-					<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
-					<Button
-						variant="transparent"
-						tone="danger"
-						size="md"
-						disabled={persisting}
-						className="!flex !items-center !gap-2 !rounded-lg !px-3 !py-2 !font-bold"
-						onClick={removeSelectedProject}
-					>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							width="18"
-							height="18"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="2"
-							aria-hidden="true"
-						>
-							<path d="M3 6h18" />
-							<path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-							<path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-						</svg>
-						<span class="hidden sm:inline">Supprimer</span>
-					</Button>
-				{/if}
-			</div>
-		{/if}
-	</div>
+	<Subheader
+		bind:selectedProjectId
+		projectOptions={projectOptions}
+		{persistBarVisible}
+		{hasUnsavedChanges}
+		{isPersisted}
+		{persisting}
+		{isAuthenticated}
+		onNewProject={() => (selectedProjectId = NEW_PROJECT_PARAM)}
+		onSave={saveCurrentProject}
+		onReinitialize={reinitializeProject}
+		onRemove={removeSelectedProject}
+	/>
 </div>
 
 <SnackbarManager />
 
-<main class="mx-auto flex min-h-screen max-w-[1600px] flex-col px-5 pb-40 pt-8 md:px-8">
-	{#if !loadingProjects && !hasSavedProjects}
+<main class="mx-auto flex min-h-screen max-w-[1600px] flex-col px-5 pt-8 pb-40 md:px-8">
+	{#if isAuthenticated && !loadingProjects && !hasSavedProjects}
 		<p class="mb-4 text-sm text-fa-on-surface-variant">
-			Aucun projet sauvegardé pour le moment. Saisis un projet puis enregistre-le depuis la barre ci-dessus.
+			Aucun projet sauvegardé pour le moment. Saisis un projet puis enregistre-le depuis la barre
+			ci-dessus.
 		</p>
 	{/if}
 
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
-		<div id="fa-col-project" class="min-w-0 space-y-4 scroll-mt-28">
+		<div id="fa-col-project" class="min-w-0 scroll-mt-28 space-y-4">
 			<PropertySection {project} />
 			<CostSection {project} />
 			<FinancingSection {project} />
 		</div>
 
-		<div id="fa-col-revenue" class="min-w-0 space-y-4 scroll-mt-28">
+		<div id="fa-col-revenue" class="min-w-0 scroll-mt-28 space-y-4">
 			<RevenueSection revenue={project.revenue} />
 			<AmortizationTaxesSection {project} {simulationResult} />
 		</div>
 
-		<div id="fa-col-charges" class="min-w-0 space-y-4 scroll-mt-28">
+		<div id="fa-col-charges" class="min-w-0 scroll-mt-28 space-y-4">
 			<ChargesSection {project} />
 			<FutureWorksSection {project} />
 		</div>

@@ -21,7 +21,7 @@
         </div>
         <div class="space-y-2">
             <p class="text-[10px] font-bold tracking-widest text-fa-outline uppercase">Contact</p>
-            <a class="block text-xs text-fa-outline hover:text-fa-primary-container" href={resolve('/auth')}>Support</a>
+            <a class="block text-xs text-fa-outline hover:text-fa-primary-container" href={resolve('/contact')}>Support</a>
 
         </div>
     </div>
