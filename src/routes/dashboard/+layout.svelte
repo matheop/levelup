@@ -16,7 +16,9 @@
 		charges: () => import('$lib/components/sections/modals/ChargesModal.svelte'),
 		futureWorks: () => import('$lib/components/sections/modals/FutureWorksModal.svelte'),
 		registerProject: () =>
-			import('$lib/components/sections/modals/RegisterProjectModal.svelte')
+			import('$lib/components/sections/modals/RegisterProjectModal.svelte'),
+		newProjectGuest: () =>
+			import('$lib/components/sections/modals/NewProjectGuestModal.svelte')
 	} as const;
 
 	modal.init(modalRegistry as unknown as ModalRegistry);

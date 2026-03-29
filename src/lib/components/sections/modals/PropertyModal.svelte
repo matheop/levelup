@@ -19,7 +19,7 @@
 	});
 </script>
 
-<Modal open title="Le bien — édition" titleId="modal-property-title" {onClose}>
+<Modal title="Le bien — édition" titleId="modal-property-title" {onClose}>
 	<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 		<Input label="Nom" id="project-name-emb" bind:value={project.projectName} />
 		<Select

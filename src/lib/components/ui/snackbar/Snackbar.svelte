@@ -142,7 +142,7 @@
 	{#if hasCloseButton}
 		<button
 			type="button"
-			class="shrink-0 rounded-lg p-1 text-fa-outline opacity-40 transition-colors hover:text-fa-on-surface group-hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fa-primary-fixed/80 focus-visible:ring-offset-2 focus-visible:ring-offset-fa-surface-lowest"
+			class="cursor-pointer shrink-0 rounded-lg p-1 text-fa-outline opacity-40 transition-colors hover:text-fa-on-surface group-hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fa-primary-fixed/80 focus-visible:ring-offset-2 focus-visible:ring-offset-fa-surface-lowest"
 			aria-label="Fermer"
 			onclick={() => handleClose?.()}
 		>

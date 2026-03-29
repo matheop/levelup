@@ -2,7 +2,6 @@
 	import { goto, replaceState } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { onDestroy, onMount } from 'svelte';
-	import type { TaxRegimeName } from '$lib/dbTypes';
 	import { Project } from '$lib/domain';
 	import { supabase } from '$lib/supabaseClient';
 	import {
@@ -50,7 +49,6 @@
 	const hasUnsavedChanges = $derived(
 		baselineSnapshot !== '' && JSON.stringify(project.toUserInputs()) !== baselineSnapshot
 	);
-	const persistBarVisible = $derived(isPersisted || hasUnsavedChanges);
 
 	function commitBaseline() {
 		baselineSnapshot = JSON.stringify(project.toUserInputs());
@@ -68,7 +66,7 @@
 		if (current === projectParam) return;
 		const nextHref = `${resolve('/dashboard')}?project=${encodeURIComponent(projectParam)}`;
 		/* eslint-disable-next-line svelte/no-navigation-without-resolve -- query string on resolved base */
-		replaceState(nextHref, window.history.state);
+		goto(nextHref, { replaceState: true });
 	}
 
 	async function syncSelectionFromUrlOrFallback() {
@@ -109,17 +107,12 @@
 	const simulationResult = $derived(simulationResultsByFinancing[0] ?? project.simulate());
 	const monthlyCashflow = $derived(project.getMonthlyNetCashflow(1));
 
-	const projectOptions = $derived([
-		{ value: NEW_PROJECT_PARAM, label: 'Nouveau projet' },
-		...projects.map((p) => ({
+	const projectOptions = $derived(
+		projects.map((p) => ({
 			value: String(p.id),
 			label: p.name
 		}))
-	]);
-
-	function setTaxRegime(regime: TaxRegimeName) {
-		project.taxRegime = regime;
-	}
+	);
 
 	async function refreshProjects() {
 		loadingProjects = true;
@@ -136,8 +129,6 @@
 	}
 
 	$effect(() => {
-		if (!isAuthenticated) return;
-
 		const id = selectedProjectId;
 
 		void replaceDashboardProjectParam(id);
@@ -243,7 +234,7 @@
 				selectedProjectId = NEW_PROJECT_PARAM;
 			}
 			loadedListSelectionId = null;
-			snackbarQueue.add({ variant: 'warning', title: 'Projet supprimé.' });
+			snackbarQueue.add({ variant: 'success', title: 'Projet supprimé.' });
 		} catch (e) {
 			snackbarQueue.add({
 				variant: 'danger',
@@ -260,9 +251,9 @@
 	}
 
 	async function autoImportDexieDraft(): Promise<string | null> {
-		const payload = await getOnboardingDraftPayload();
-		if (!payload) return null;
 		try {
+			const payload = await getOnboardingDraftPayload();
+			if (!payload) return null;
 			const id = await createProjectFromInputs(payload);
 			await clearOnboardingDraft();
 			return String(id);
@@ -290,7 +281,7 @@
 
 			registerTimer = setTimeout(() => {
 				modal.push('registerProject');
-			}, 5000);
+			}, 3000);
 			return;
 		}
 
@@ -328,18 +319,11 @@
 </script>
 
 <div class="sticky top-0 z-40 border-b border-fa-outline-variant/15 bg-fa-surface">
-	<Header
-		projectName={project.projectName}
-		projectType={project.projectType}
-		taxRegime={project.taxRegime}
-		{isAuthenticated}
-		onSignOut={signOut}
-		onTaxRegimeChange={setTaxRegime}
-	/>
+	<Header {isAuthenticated} onSignOut={signOut} />
 	<Subheader
 		bind:selectedProjectId
 		projectOptions={projectOptions}
-		{persistBarVisible}
+		projectName={project.projectName}
 		{hasUnsavedChanges}
 		{isPersisted}
 		{persisting}

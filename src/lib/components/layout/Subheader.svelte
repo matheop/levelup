@@ -5,38 +5,39 @@
 
 	type Option = { value: string; label: string };
 
-	let {
-		selectedProjectId = $bindable<string>(),
-		projectOptions,
-		persistBarVisible,
-		hasUnsavedChanges,
-		isPersisted,
-		persisting,
-		isAuthenticated = true,
-		onNewProject,
-		onSave,
-		onReinitialize,
-		onRemove
-	} = $props<{
-		selectedProjectId: string;
-		projectOptions: Option[];
-		persistBarVisible: boolean;
+	interface Props {
 		hasUnsavedChanges: boolean;
 		isPersisted: boolean;
-		persisting: boolean;
 		isAuthenticated?: boolean;
+		persisting: boolean;
+		projectName: string;
+		projectOptions: Option[];
+		selectedProjectId: string;
 		onNewProject: () => void;
 		onSave: () => void;
 		onReinitialize: () => void | Promise<void>;
 		onRemove: () => void | Promise<void>;
-	}>();
+	}
+
+	let {
+		selectedProjectId = $bindable<string>(),
+		projectOptions,
+		hasUnsavedChanges,
+		isPersisted,
+		persisting,
+		isAuthenticated = false,
+		projectName,
+		onNewProject,
+		onSave,
+		onReinitialize,
+		onRemove
+	}: Props = $props();
+
+	const persistBarVisible = $derived(isPersisted || hasUnsavedChanges);
 
 	function handlePlusClick() {
-		if (isAuthenticated) {
-			onNewProject();
-		} else {
-			modal.push('registerProject');
-		}
+		if (isAuthenticated) onNewProject();
+		else modal.push('newProjectGuest');
 	}
 </script>
 
@@ -50,11 +51,12 @@
 				<Select id="saved-projects" bind:value={selectedProjectId} options={projectOptions} />
 			</div>
 		{:else}
-			<span class="text-sm font-semibold text-fa-primary-container">Brouillon local</span>
+			<p class="text-sm font-medium text-fa-on-surface-variant">
+				{projectName}
+			</p>
 		{/if}
 		<Button
 			variant="transparent"
-			tone="default"
 			size="icon"
 			ariaLabel="Nouveau projet"
 			className="rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
@@ -82,7 +84,6 @@
 			{#if hasUnsavedChanges}
 				<Button
 					variant="transparent"
-					tone="default"
 					size="md"
 					disabled={persisting}
 					title={isPersisted
@@ -97,7 +98,7 @@
 				<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
 				{#if isPersisted}
 					<Button
-						variant="outline"
+						variant="transparent"
 						tone="success"
 						label="Sauvegarder"
 						disabled={persisting}
@@ -114,9 +115,9 @@
 						onClick={onSave}
 					/>
 				{/if}
+				<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
 			{/if}
 			{#if isPersisted}
-				<div class="hidden h-4 w-px bg-fa-outline-variant/30 sm:block" aria-hidden="true"></div>
 				<Button
 					variant="transparent"
 					tone="danger"

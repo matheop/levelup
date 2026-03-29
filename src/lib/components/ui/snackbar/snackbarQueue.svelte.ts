@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'svelte';
 import Snackbar, { type SnackbarProps } from './Snackbar.svelte';
 
-export const DEFAULT_AUTO_DISMISS_MS = 5000;
+export const DEFAULT_AUTO_DISMISS_MS = 4000;
 export type SnackbarQueueItem = SnackbarProps & { autoDismissMs: number | null };
 
 export class SnackbarQueue {

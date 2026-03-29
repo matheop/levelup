@@ -10,39 +10,26 @@
 	let { project } = $props<{ project: Project }>();
 
 	function addWork() {
-		project.futureWorks = [
-			...project.futureWorks,
-			new FutureWork({
-				work_type: '',
-				estimated_cost: 0,
-				planned_year: 0,
-				frequency_years: 0
-			})
-		];
+		project.futureWorks = [...project.futureWorks, new FutureWork()];
 	}
 
 	function removeWork(i: number) {
-		if (project.futureWorks.length <= 1) return;
 		project.futureWorks = project.futureWorks.filter((_w: FutureWork, idx: number) => idx !== i);
 	}
 </script>
 
 <section class="FutureWorksStep mx-auto max-w-2xl space-y-8">
-	<h2 class="text-xl font-bold text-fa-primary-container">Travaux futurs</h2>
-
 	{#each project.futureWorks as w, i (i)}
 		<StepCard>
 			<div class="mb-4 flex items-center justify-between gap-2">
-				<Label variant="default" label={`Travail ${i + 1}`} />
-				{#if project.futureWorks.length > 1}
-					<Button
-						variant="outline"
-						tone="danger"
-						size="sm"
-						trailingIcon="trash"
-						onClick={() => removeWork(i)}
-					/>
-				{/if}
+				<Label variant="default" label={`Poste n°${i + 1}`} />
+				<Button
+					variant="outline"
+					tone="danger"
+					size="sm"
+					trailingIcon="trash"
+					onClick={() => removeWork(i)}
+				/>
 			</div>
 			<div class="grid grid-cols-1 gap-4 md:grid-cols-2">
 				<Input

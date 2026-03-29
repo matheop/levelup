@@ -25,7 +25,7 @@
 	const amortInfoContent = $derived(getAmortizationInfoContent(project.taxRegime));
 </script>
 
-<Modal open title="Amortissements & impôts — édition" titleId="modal-amort-taxes-title" {onClose}>
+<Modal title="Amortissements & impôts — édition" titleId="modal-amort-taxes-title" {onClose}>
 	<SectionSubtitle title="Amortissements" infoContent={amortInfoContent} />
 	<AmortizationSection
 		projectType={project.projectType}

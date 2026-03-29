@@ -13,7 +13,7 @@
 	const chargesUsedForCalculation = $derived(project.charges.chargesUsedForCalculation);
 </script>
 
-<Modal open title="Charges récurrentes — édition" titleId="modal-charges-title" {onClose}>
+<Modal title="Charges récurrentes — édition" titleId="modal-charges-title" {onClose}>
 	<div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
 		<Input
 			label="Taxe foncière (€/an)"

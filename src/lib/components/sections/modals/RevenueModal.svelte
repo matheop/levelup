@@ -30,7 +30,7 @@
 	const totalAnnualRevenue = $derived(revenue.annualRevenueAfterVacancy);
 </script>
 
-<Modal open title="Revenus — édition" titleId="modal-revenue-title" {onClose}>
+<Modal title="Revenus — édition" titleId="modal-revenue-title" {onClose}>
 	<p class="mb-3 text-sm text-fa-on-surface-variant">
 		Loyers mensuels (plusieurs lignes possibles) — le total s’affiche ci-dessous.
 	</p>

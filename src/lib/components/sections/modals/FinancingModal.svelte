@@ -33,7 +33,7 @@
 	}
 </script>
 
-<Modal open title="Financement — édition" titleId="modal-financing-title" {onClose}>
+<Modal title="Financement — édition" titleId="modal-financing-title" {onClose}>
 	<div class="mb-2 flex justify-end">
 		<Button
 			variant="transparent"

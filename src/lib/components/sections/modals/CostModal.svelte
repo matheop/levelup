@@ -12,7 +12,7 @@
 	const totalProjectCost = $derived(project.cost.totalProjectCost(project.projectType));
 </script>
 
-<Modal open title="Coûts — édition" titleId="modal-cost-title" {onClose}>
+<Modal title="Coûts — édition" titleId="modal-cost-title" {onClose}>
 	<div class="grid grid-cols-2 gap-3 text-sm sm:grid-cols-3 md:grid-cols-3">
 		{#if project.projectType === 'purchase'}
 			<Input

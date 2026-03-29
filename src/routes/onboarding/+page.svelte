@@ -27,6 +27,7 @@
 
 	let project = $state<Project | null>(null);
 	let draftReady = $state(false);
+	const isAuthenticated = $derived(!!page.data.session);
 
 	const step = $derived(parseOnboardingStepParam(page.url.searchParams.get('step')));
 	const meta = $derived(getStepMeta(step));
@@ -146,6 +147,7 @@
 		backDisabled={false}
 		forwardDisabled={false}
 		{forwardLabel}
+		{isAuthenticated}
 		onBack={handleBack}
 		onForward={handleForward}
 	>

@@ -100,9 +100,12 @@ export class Project {
 		this.revenue = new Revenue(init?.revenue);
 		this.charges = new Charges(init?.charges);
 		this.taxes = new Taxes(init?.taxes);
-		this.futureWorks = (init?.futureWorks?.length ? init.futureWorks : [{ work_type: 'Toiture', estimated_cost: 15000, planned_year: 15, frequency_years: 25 }]).map(
-			(w) => new FutureWork(w)
-		);
+		this.futureWorks =
+			init?.futureWorks !== undefined
+				? init.futureWorks.map((w) => new FutureWork(w))
+				: [{ work_type: 'Toiture', estimated_cost: 15000, planned_year: 15, frequency_years: 25 }].map(
+						(w) => new FutureWork(w)
+					);
 		if (init?.projectName != null) this.projectName = init.projectName;
 		if (init?.projectType != null) this.projectType = init.projectType;
 		if (init?.taxRegime != null) this.taxRegime = init.taxRegime;
@@ -313,14 +316,7 @@ export class Project {
 				taxBracketRate: 0.3,
 				socialContributionsRate: 0.186
 			},
-			futureWorks: [
-				{
-					work_type: '',
-					estimated_cost: 0,
-					planned_year: 0,
-					frequency_years: 0
-				}
-			]
+			futureWorks: []
 		});
 	}
 

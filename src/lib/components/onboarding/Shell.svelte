@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { goto } from '$app/navigation';
 
 	let {
 		children,
@@ -10,7 +11,8 @@
 		backDisabled = false,
 		forwardDisabled = false,
 		forwardLabel,
-		showBack = true
+		showBack = true,
+		isAuthenticated = false
 	} = $props<{
 		children: Snippet;
 		onBack: () => void;
@@ -19,11 +21,12 @@
 		forwardDisabled?: boolean;
 		forwardLabel: string;
 		showBack?: boolean;
+		isAuthenticated?: boolean;
 	}>();
 </script>
 
 <header
-	class="Shell_Header fixed top-0 left-0 z-50 w-full border-b border-fa-outline-variant/15 bg-fa-surface/95 backdrop-blur-md"
+	class="Shell_Header fixed top-0 left-0 z-50 w-full border-b border-fa-outline-variant/15 bg-fa-surface backdrop-blur-md"
 >
 	<div class="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4">
 		<a
@@ -33,23 +36,35 @@
 			Financial Architect
 		</a>
 		<nav class="flex items-center gap-2 sm:gap-3" aria-label="Compte">
-			<a
-				href={resolve('/auth')}
-				class="rounded-lg px-3 py-2 text-sm font-bold text-fa-primary-container no-underline hover:bg-fa-surface-high"
-			>
-				Connexion
-			</a>
-			<a
-				href="{resolve('/auth')}?mode=signup"
-				class="rounded-lg bg-fa-primary-container px-3 py-2 text-sm font-bold text-white no-underline shadow-sm hover:opacity-95"
-			>
-				Inscription
-			</a>
+			{#if isAuthenticated}
+				<Button
+					variant="outline"
+					tone="default"
+					size="lg"
+					label="Mon dashboard"
+					onClick={() => goto(resolve('/dashboard'))}
+				/>
+			{:else}
+				<Button
+					variant="transparent"
+					tone="default"
+					size="lg"
+					label="Connexion"
+					onClick={() => goto(resolve('/auth'))}
+				/>
+				<Button
+					variant="filled"
+					tone="success"
+					size="lg"
+					label="Inscription"
+					onClick={() => goto(resolve('/auth?mode=signup'))}
+				/>
+			{/if}
 		</nav>
 	</div>
 </header>
 
-<div class="Shell_Content min-h-screen pt-24 pb-36">
+<div class="Shell_Content min-h-screen pt-32 pb-36">
 	{@render children()}
 </div>
 

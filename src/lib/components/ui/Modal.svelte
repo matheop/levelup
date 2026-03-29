@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { cubicIn, cubicOut } from 'svelte/easing';
+	import { fly } from 'svelte/transition';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	const {
-		open,
 		title,
 		titleId,
 		onClose,
@@ -11,7 +12,6 @@
 		panelClassName = '',
 		maxWidthClass = 'max-w-6xl'
 	} = $props<{
-		open: boolean;
 		title: string;
 		titleId: string;
 		onClose: () => void;
@@ -20,29 +20,49 @@
 		maxWidthClass?: string;
 	}>();
 
+	/** Fermeture animée avant `onClose()` (démontage via la pile modale). */
+	let visible = $state(true);
+
+	function requestClose() {
+		visible = false;
+	}
+
+	function handlePanelOutroEnd() {
+		onClose();
+	}
+
 	$effect(() => {
-		if (!open) return;
+		if (!visible) return;
 		const handle = (e: KeyboardEvent) => {
-			if (e.key === 'Escape') onClose();
+			if (e.key === 'Escape') requestClose();
 		};
 		window.addEventListener('keydown', handle);
 		return () => window.removeEventListener('keydown', handle);
 	});
 </script>
 
-{#if open}
+{#if visible}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm"
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 outline-none"
 		role="dialog"
 		aria-modal="true"
 		aria-labelledby={titleId}
 		tabindex="-1"
-		onclick={(e) => e.target === e.currentTarget && onClose()}
-		onkeydown={(e) => e.key === 'Escape' && onClose()}
+		onkeydown={(e) => e.key === 'Escape' && requestClose()}
 	>
+		<button
+			type="button"
+			tabindex="-1"
+			class="absolute inset-0 cursor-default border-0 bg-black/50 p-0 backdrop-blur-sm"
+			aria-label="Fermer la fenêtre"
+			onclick={requestClose}
+		></button>
 		<div
-			class="relative flex max-h-[90vh] w-full flex-col overflow-hidden rounded-xl border border-fa-outline-variant/30 bg-fa-surface-lowest shadow-2xl {maxWidthClass} {panelClassName}"
+			class="relative z-[1] flex max-h-[90vh] w-full flex-col overflow-hidden rounded-xl border border-fa-outline-variant/30 bg-fa-surface-lowest shadow-2xl {maxWidthClass} {panelClassName}"
 			role="document"
+			in:fly={{ y: 80, duration: 400, easing: cubicOut }}
+			out:fly={{ y: 80, duration: 400, easing: cubicIn }}
+			onoutroend={handlePanelOutroEnd}
 		>
 			<div
 				class="flex shrink-0 items-center justify-between border-b border-fa-outline-variant/20 bg-fa-surface-low px-4 py-3"
@@ -54,7 +74,7 @@
 					size="icon"
 					ariaLabel="Fermer"
 					className="!h-9 !w-9 !min-h-0 rounded-lg text-fa-outline hover:!bg-fa-surface-high hover:!text-fa-primary-container"
-					onClick={onClose}
+					onClick={requestClose}
 				>
 					<svg
 						xmlns="http://www.w3.org/2000/svg"

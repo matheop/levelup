@@ -30,7 +30,7 @@
 	}
 </script>
 
-<Modal open title="Travaux futurs — édition" titleId="modal-future-works-title" {onClose}>
+<Modal title="Travaux futurs — édition" titleId="modal-future-works-title" {onClose}>
 	<div class="overflow-x-auto">
 		<div class="space-y-2">
 			<div class="grid grid-cols-5 items-center gap-1 text-sm font-medium text-fa-on-surface-variant">

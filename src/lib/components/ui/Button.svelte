@@ -130,7 +130,7 @@
 
 <button
 	type={type}
-	class="Button-{variant}-{tone} {base} {resolvedSizeClass} {variantClasses} {className} pointer-pointer"
+	class="Button-{variant}-{tone} {base} {resolvedSizeClass} {variantClasses} {className} cursor-pointer"
 	{disabled}
 	title={titleAttr}
 	aria-label={ariaLabel}

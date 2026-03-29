@@ -43,13 +43,6 @@ export function createOnboardingInitialPayload(): ProjectUserInputs {
 			taxBracketRate: 0.3,
 			socialContributionsRate: 0.186
 		},
-		futureWorks: [
-			{
-				work_type: '',
-				estimated_cost: 0,
-				planned_year: 0,
-				frequency_years: 0
-			}
-		]
+		futureWorks: []
 	};
 }
